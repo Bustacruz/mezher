@@ -13,6 +13,7 @@ export interface Child {
   id: string;
   name: string;
   emoji: string;
+  photoUrl?: string;
   color: KidColor;
   points: number;
   streaks: Record<string, { current: number; best: number; lastDay: string | null }>;
