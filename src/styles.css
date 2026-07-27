@@ -4,6 +4,46 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #0d9488;
+  --color-brand-light: #f0fdfa;
+  --color-accent: #f59e0b;
+  --color-accent-light: #fffbeb;
+  --color-surface: #fbfbfb;
+  --color-card-soft: #f4f4f5;
+  --color-ink: #18181b;
+  --color-kid-pink: #ec4899;
+  --color-kid-pink-soft: #fce7f3;
+  --color-kid-blue: #3b82f6;
+  --color-kid-blue-soft: #dbeafe;
+  --color-kid-amber: #f59e0b;
+  --color-kid-amber-soft: #fef3c7;
+  --color-kid-violet: #8b5cf6;
+  --color-kid-violet-soft: #ede9fe;
+  --color-kid-green: #10b981;
+  --color-kid-green-soft: #d1fae5;
+  --color-kid-rose: #f43f5e;
+  --color-kid-rose-soft: #ffe4e6;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-20vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+@keyframes count-up {
+  0% { transform: translateY(6px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-count-up { animation: count-up 0.5s ease-out both; }
+
 /*
  * Design system definition.
  *
