@@ -1,0 +1,646 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { AppShell } from "@/components/app-shell";
+import {
+  addChild,
+  addGoal,
+  addReward,
+  addTask,
+  approvePending,
+  contributeToGoal,
+  rejectPending,
+  removeChild,
+  removeGoal,
+  removeReward,
+  removeTask,
+  resetFamily,
+  useFamily,
+} from "@/lib/family-store";
+import type {
+  Frequency,
+  KidColor,
+  RoutineSlot,
+} from "@/lib/family-types";
+import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
+
+export const Route = createFileRoute("/foralder")({
+  head: () => ({
+    meta: [
+      { title: "Föräldraläge – Vår Familj" },
+      {
+        name: "description",
+        content:
+          "Hantera barn, uppgifter, belöningar och godkännanden i föräldraläget.",
+      },
+    ],
+  }),
+  component: ForalderPage,
+});
+
+const COLORS: KidColor[] = ["pink", "blue", "amber", "violet", "green", "rose"];
+const EMOJIS = ["👧", "🧒", "👦", "🧑", "🦄", "🐻", "🦊", "🐼", "🦁", "🐸"];
+
+function ForalderPage() {
+  const state = useFamily();
+  const [tab, setTab] = useState<
+    "barn" | "uppgifter" | "beloningar" | "godkann" | "mal" | "statistik"
+  >("barn");
+
+  const pending = state.tasks.flatMap((t) =>
+    t.pendingApproval.map((p) => ({ task: t, ...p })),
+  );
+
+  return (
+    <AppShell>
+      <div className="space-y-2 px-1">
+        <p className="text-xs font-bold uppercase tracking-widest text-brand">
+          👨‍👩‍👧 Föräldraläge
+        </p>
+        <h2 className="text-2xl md:text-3xl font-semibold font-display">
+          Hantera familjen
+        </h2>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        {(
+          [
+            ["barn", "👶 Barn"],
+            ["uppgifter", "🎯 Uppgifter"],
+            ["beloningar", "🎁 Belöningar"],
+            ["godkann", `✅ Godkänn${pending.length ? ` (${pending.length})` : ""}`],
+            ["mal", "🏆 Familjemål"],
+            ["statistik", "📊 Statistik"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-4 py-2 rounded-2xl font-semibold text-sm transition-all ${
+              tab === key
+                ? "bg-ink text-white"
+                : "bg-white ring-1 ring-black/5 text-zinc-500 hover:text-ink"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "barn" && <BarnTab state={state} />}
+      {tab === "uppgifter" && <UppgifterTab state={state} />}
+      {tab === "beloningar" && <BeloningarTab state={state} />}
+      {tab === "godkann" && (
+        <GodkannTab
+          items={pending.map((p) => ({
+            taskId: p.task.id,
+            title: p.task.title,
+            emoji: p.task.emoji,
+            points: p.task.points,
+            childId: p.childId,
+            childName:
+              state.children.find((c) => c.id === p.childId)?.name ?? "?",
+          }))}
+        />
+      )}
+      {tab === "mal" && <MalTab state={state} />}
+      {tab === "statistik" && <StatistikTab state={state} />}
+
+      <div className="pt-8 border-t border-zinc-950/5">
+        <button
+          onClick={() => {
+            if (confirm("Nollställ all data? Detta kan inte ångras.")) {
+              resetFamily();
+            }
+          }}
+          className="text-xs text-zinc-400 hover:text-red-500 underline"
+        >
+          Nollställ all data
+        </button>
+      </div>
+    </AppShell>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-4">
+      <h3 className="text-lg font-semibold font-display px-1">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="space-y-1 block">
+      <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+const input =
+  "w-full bg-white ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand";
+
+function BarnTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const [name, setName] = useState("");
+  const [emoji, setEmoji] = useState("👧");
+  const [color, setColor] = useState<KidColor>("violet");
+
+  return (
+    <div className="space-y-8">
+      <Section title="Barnprofiler">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {state.children.map((c) => {
+            const col = COLOR_MAP[c.color];
+            return (
+              <div
+                key={c.id}
+                className={`${col.soft} ring-1 ring-black/5 rounded-[24px] p-5 flex items-center gap-4`}
+              >
+                <div className="size-14 rounded-full bg-white grid place-items-center text-3xl shadow-sm">
+                  {c.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-semibold font-display ${col.text}`}>
+                    {c.name}
+                  </p>
+                  <p className="text-xs text-zinc-500">{c.points} ⭐</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if (confirm(`Ta bort ${c.name}?`)) removeChild(c.id);
+                  }}
+                  className="text-xs text-zinc-400 hover:text-red-500"
+                >
+                  Ta bort
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title="Lägg till nytt barn">
+        <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 space-y-4">
+          <Field label="Namn">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={input}
+              placeholder="T.ex. Astrid"
+            />
+          </Field>
+          <Field label="Avatar">
+            <div className="flex gap-2 flex-wrap">
+              {EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => setEmoji(e)}
+                  className={`size-12 rounded-xl text-2xl grid place-items-center ring-1 ${
+                    emoji === e
+                      ? "ring-2 ring-brand bg-brand-light"
+                      : "ring-black/10 bg-white"
+                  }`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Färg">
+            <div className="flex gap-3 flex-wrap">
+              {COLORS.map((c) => {
+                const col = COLOR_MAP[c];
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={`size-10 rounded-full ${col.bg} ring-4 ${
+                      color === c ? "ring-black/20" : "ring-transparent"
+                    }`}
+                    aria-label={c}
+                  />
+                );
+              })}
+            </div>
+          </Field>
+          <button
+            onClick={() => {
+              if (!name.trim()) return;
+              addChild({ name: name.trim(), emoji, color });
+              setName("");
+            }}
+            className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5 hover:bg-brand/90"
+          >
+            + Lägg till barn
+          </button>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function UppgifterTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const [title, setTitle] = useState("");
+  const [emoji, setEmoji] = useState("⭐");
+  const [points, setPoints] = useState(10);
+  const [slot, setSlot] = useState<RoutineSlot>("morgon");
+  const [frequency, setFrequency] = useState<Frequency>("daglig");
+  const [childId, setChildId] = useState<string>("all");
+  const [requiresApproval, setRequiresApproval] = useState(false);
+
+  return (
+    <div className="space-y-8">
+      <Section title="Alla uppgifter">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {state.tasks.map((t) => (
+            <div
+              key={t.id}
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex items-center gap-3"
+            >
+              <div className="size-12 rounded-xl bg-card-soft grid place-items-center text-2xl shrink-0">
+                {t.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold truncate">{t.title}</p>
+                <p className="text-xs text-zinc-500">
+                  {SLOT_LABEL[t.slot]} · {t.frequency} · +{t.points} ⭐
+                  {t.requiresApproval && " · kräver godkännande"}
+                </p>
+              </div>
+              <button
+                onClick={() => removeTask(t.id)}
+                className="text-xs text-zinc-400 hover:text-red-500 shrink-0"
+              >
+                Ta bort
+              </button>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Skapa ny uppgift">
+        <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Titel">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={input}
+              placeholder="T.ex. Vattna blommor"
+            />
+          </Field>
+          <Field label="Emoji">
+            <input
+              value={emoji}
+              onChange={(e) => setEmoji(e.target.value)}
+              className={input}
+              maxLength={4}
+            />
+          </Field>
+          <Field label="Poäng">
+            <input
+              type="number"
+              value={points}
+              onChange={(e) => setPoints(parseInt(e.target.value) || 0)}
+              className={input}
+              min={1}
+            />
+          </Field>
+          <Field label="Tid på dagen">
+            <select
+              value={slot}
+              onChange={(e) => setSlot(e.target.value as RoutineSlot)}
+              className={input}
+            >
+              <option value="morgon">Morgon</option>
+              <option value="dag">Dag</option>
+              <option value="kvall">Kväll</option>
+            </select>
+          </Field>
+          <Field label="Frekvens">
+            <select
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value as Frequency)}
+              className={input}
+            >
+              <option value="daglig">Daglig</option>
+              <option value="veckovis">Veckovis</option>
+              <option value="manatlig">Månatlig</option>
+              <option value="engangs">Engångs</option>
+            </select>
+          </Field>
+          <Field label="För vem">
+            <select
+              value={childId}
+              onChange={(e) => setChildId(e.target.value)}
+              className={input}
+            >
+              <option value="all">Alla barn</option>
+              {state.children.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 text-sm md:col-span-2">
+            <input
+              type="checkbox"
+              checked={requiresApproval}
+              onChange={(e) => setRequiresApproval(e.target.checked)}
+              className="size-4 accent-brand"
+            />
+            Kräver föräldragodkännande innan poäng delas ut
+          </label>
+          <div className="md:col-span-2">
+            <button
+              onClick={() => {
+                if (!title.trim()) return;
+                addTask({
+                  title: title.trim(),
+                  emoji,
+                  points,
+                  slot,
+                  frequency,
+                  childId,
+                  requiresApproval,
+                });
+                setTitle("");
+              }}
+              className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5 hover:bg-brand/90"
+            >
+              + Lägg till uppgift
+            </button>
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function BeloningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const [title, setTitle] = useState("");
+  const [emoji, setEmoji] = useState("🎁");
+  const [cost, setCost] = useState(25);
+  const [childId, setChildId] = useState<string>("all");
+
+  return (
+    <div className="space-y-8">
+      <Section title="Alla belöningar">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {state.rewards.map((r) => (
+            <div
+              key={r.id}
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-2 text-center"
+            >
+              <div className="text-4xl">{r.emoji}</div>
+              <p className="font-semibold text-sm">{r.title}</p>
+              <p className="text-xs font-bold text-accent">{r.cost} ⭐</p>
+              <button
+                onClick={() => removeReward(r.id)}
+                className="text-[11px] text-zinc-400 hover:text-red-500"
+              >
+                Ta bort
+              </button>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Skapa ny belöning">
+        <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Titel">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={input}
+            />
+          </Field>
+          <Field label="Emoji">
+            <input
+              value={emoji}
+              onChange={(e) => setEmoji(e.target.value)}
+              className={input}
+              maxLength={4}
+            />
+          </Field>
+          <Field label="Poäng">
+            <input
+              type="number"
+              value={cost}
+              onChange={(e) => setCost(parseInt(e.target.value) || 0)}
+              className={input}
+              min={1}
+            />
+          </Field>
+          <Field label="För vem">
+            <select
+              value={childId}
+              onChange={(e) => setChildId(e.target.value)}
+              className={input}
+            >
+              <option value="all">Alla barn</option>
+              {state.children.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <div className="md:col-span-2">
+            <button
+              onClick={() => {
+                if (!title.trim()) return;
+                addReward({ title: title.trim(), emoji, cost, childId });
+                setTitle("");
+              }}
+              className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5 hover:bg-brand/90"
+            >
+              + Lägg till belöning
+            </button>
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function GodkannTab({
+  items,
+}: {
+  items: {
+    taskId: string;
+    title: string;
+    emoji: string;
+    points: number;
+    childId: string;
+    childName: string;
+  }[];
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-10 text-center space-y-2">
+        <div className="text-5xl">🎉</div>
+        <p className="font-semibold font-display text-lg">Inget att godkänna</p>
+        <p className="text-sm text-zinc-500">Alla uppgifter är hanterade.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {items.map((it) => (
+        <div
+          key={`${it.taskId}-${it.childId}`}
+          className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex items-center gap-4"
+        >
+          <div className="size-12 rounded-xl bg-card-soft grid place-items-center text-2xl">
+            {it.emoji}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold">{it.title}</p>
+            <p className="text-xs text-zinc-500">
+              {it.childName} · +{it.points} ⭐
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => rejectPending(it.taskId, it.childId)}
+              className="px-3 py-2 rounded-xl bg-zinc-100 text-zinc-600 font-semibold text-sm"
+            >
+              Neka
+            </button>
+            <button
+              onClick={() => approvePending(it.taskId, it.childId)}
+              className="px-3 py-2 rounded-xl bg-green-500 text-white font-semibold text-sm"
+            >
+              ✅ Godkänn
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MalTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const [title, setTitle] = useState("");
+  const [emoji, setEmoji] = useState("🏆");
+  const [target, setTarget] = useState(500);
+
+  return (
+    <div className="space-y-8">
+      <Section title="Alla familjemål">
+        <div className="space-y-3">
+          {state.goals.map((g) => (
+            <div
+              key={g.id}
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex items-center gap-4"
+            >
+              <div className="text-3xl">{g.emoji}</div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold">{g.title}</p>
+                <p className="text-xs text-zinc-500">
+                  {g.progress} / {g.target} ⭐
+                </p>
+              </div>
+              <button
+                onClick={() => contributeToGoal(g.id, 50)}
+                className="px-3 py-2 rounded-xl bg-accent text-white font-semibold text-xs shrink-0"
+              >
+                +50
+              </button>
+              <button
+                onClick={() => removeGoal(g.id)}
+                className="text-xs text-zinc-400 hover:text-red-500 shrink-0"
+              >
+                Ta bort
+              </button>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Skapa nytt familjemål">
+        <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Field label="Titel">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={input}
+            />
+          </Field>
+          <Field label="Emoji">
+            <input
+              value={emoji}
+              onChange={(e) => setEmoji(e.target.value)}
+              className={input}
+              maxLength={4}
+            />
+          </Field>
+          <Field label="Målpoäng">
+            <input
+              type="number"
+              value={target}
+              onChange={(e) => setTarget(parseInt(e.target.value) || 0)}
+              className={input}
+              min={1}
+            />
+          </Field>
+          <div className="md:col-span-3">
+            <button
+              onClick={() => {
+                if (!title.trim()) return;
+                addGoal({ title: title.trim(), emoji, target });
+                setTitle("");
+              }}
+              className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5 hover:bg-brand/90"
+            >
+              + Lägg till familjemål
+            </button>
+          </div>
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function StatistikTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const totalDone = state.tasks.reduce(
+    (s, t) => s + t.completedDates.length,
+    0,
+  );
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <StatBox label="Familjens poäng" value={state.familyPoints} />
+      <StatBox label="Antal barn" value={state.children.length} />
+      <StatBox label="Uppgifter totalt" value={state.tasks.length} />
+      <StatBox label="Genomförda" value={totalDone} />
+    </div>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-white ring-1 ring-black/5 rounded-[20px] p-5 space-y-1">
+      <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+        {label}
+      </p>
+      <p className="text-3xl font-bold font-display text-brand">{value}</p>
+    </div>
+  );
+}
