@@ -9,38 +9,82 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MalRouteImport } from './routes/mal'
+import { Route as ForalderRouteImport } from './routes/foralder'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BarnIdRouteImport } from './routes/barn.$id'
 
+const MalRoute = MalRouteImport.update({
+  id: '/mal',
+  path: '/mal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForalderRoute = ForalderRouteImport.update({
+  id: '/foralder',
+  path: '/foralder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BarnIdRoute = BarnIdRouteImport.update({
+  id: '/barn/$id',
+  path: '/barn/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/foralder': typeof ForalderRoute
+  '/mal': typeof MalRoute
+  '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/foralder': typeof ForalderRoute
+  '/mal': typeof MalRoute
+  '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/foralder': typeof ForalderRoute
+  '/mal': typeof MalRoute
+  '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/foralder' | '/mal' | '/barn/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/foralder' | '/mal' | '/barn/$id'
+  id: '__root__' | '/' | '/foralder' | '/mal' | '/barn/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForalderRoute: typeof ForalderRoute
+  MalRoute: typeof MalRoute
+  BarnIdRoute: typeof BarnIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mal': {
+      id: '/mal'
+      path: '/mal'
+      fullPath: '/mal'
+      preLoaderRoute: typeof MalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foralder': {
+      id: '/foralder'
+      path: '/foralder'
+      fullPath: '/foralder'
+      preLoaderRoute: typeof ForalderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +92,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/barn/$id': {
+      id: '/barn/$id'
+      path: '/barn/$id'
+      fullPath: '/barn/$id'
+      preLoaderRoute: typeof BarnIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForalderRoute: ForalderRoute,
+  MalRoute: MalRoute,
+  BarnIdRoute: BarnIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
