@@ -14,6 +14,7 @@ import {
   removeReward,
   removeTask,
   resetFamily,
+  updateChild,
   useFamily,
 } from "@/lib/family-store";
 import type {
@@ -22,6 +23,7 @@ import type {
   RoutineSlot,
 } from "@/lib/family-types";
 import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
+import { ChildAvatar, fileToCompressedDataUrl } from "@/components/child-avatar";
 
 export const Route = createFileRoute("/foralder")({
   head: () => ({
@@ -164,34 +166,10 @@ function BarnTab({ state }: { state: ReturnType<typeof useFamily> }) {
   return (
     <div className="space-y-8">
       <Section title="Barnprofiler">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {state.children.map((c) => {
-            const col = COLOR_MAP[c.color];
-            return (
-              <div
-                key={c.id}
-                className={`${col.soft} ring-1 ring-black/5 rounded-[24px] p-5 flex items-center gap-4`}
-              >
-                <div className="size-14 rounded-full bg-white grid place-items-center text-3xl shadow-sm">
-                  {c.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`font-semibold font-display ${col.text}`}>
-                    {c.name}
-                  </p>
-                  <p className="text-xs text-zinc-500">{c.points} ⭐</p>
-                </div>
-                <button
-                  onClick={() => {
-                    if (confirm(`Ta bort ${c.name}?`)) removeChild(c.id);
-                  }}
-                  className="text-xs text-zinc-400 hover:text-red-500"
-                >
-                  Ta bort
-                </button>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {state.children.map((c) => (
+            <ChildEditor key={c.id} childId={c.id} />
+          ))}
         </div>
       </Section>
 
@@ -251,6 +229,113 @@ function BarnTab({ state }: { state: ReturnType<typeof useFamily> }) {
           </button>
         </div>
       </Section>
+    </div>
+  );
+}
+
+function ChildEditor({ childId }: { childId: string }) {
+  const state = useFamily();
+  const child = state.children.find((c) => c.id === childId);
+  if (!child) return null;
+  const col = COLOR_MAP[child.color];
+
+  const onPhoto = async (file: File | null) => {
+    if (!file) return;
+    try {
+      const url = await fileToCompressedDataUrl(file);
+      updateChild(child.id, { photoUrl: url });
+    } catch {
+      alert("Kunde inte läsa bilden");
+    }
+  };
+
+  return (
+    <div
+      className={`${col.soft} ring-1 ring-black/5 rounded-[24px] p-5 space-y-4`}
+    >
+      <div className="flex items-center gap-4">
+        <ChildAvatar child={child} size={80} />
+        <div className="flex-1 min-w-0 space-y-2">
+          <input
+            value={child.name}
+            onChange={(e) => updateChild(child.id, { name: e.target.value })}
+            className={`${input} font-semibold`}
+            placeholder="Namn"
+          />
+          <p className="text-xs text-zinc-500">{child.points} ⭐ intjänade</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 items-center">
+        <label className="cursor-pointer bg-white ring-1 ring-black/10 hover:ring-black/20 rounded-xl px-3 py-2 text-sm font-medium">
+          📷 Ladda upp bild
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => onPhoto(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        {child.photoUrl && (
+          <button
+            onClick={() => updateChild(child.id, { photoUrl: undefined })}
+            className="bg-white ring-1 ring-black/10 rounded-xl px-3 py-2 text-sm text-zinc-500 hover:text-red-500"
+          >
+            Ta bort bild
+          </button>
+        )}
+      </div>
+
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">
+          Emoji (används om ingen bild)
+        </p>
+        <div className="flex gap-1.5 flex-wrap">
+          {EMOJIS.map((e) => (
+            <button
+              key={e}
+              onClick={() => updateChild(child.id, { emoji: e })}
+              className={`size-10 rounded-lg text-xl grid place-items-center ring-1 ${
+                child.emoji === e
+                  ? "ring-2 ring-brand bg-brand-light"
+                  : "ring-black/10 bg-white"
+              }`}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">
+          Färg
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          {COLORS.map((k) => {
+            const cc = COLOR_MAP[k];
+            return (
+              <button
+                key={k}
+                onClick={() => updateChild(child.id, { color: k })}
+                className={`size-8 rounded-full ${cc.bg} ring-4 ${
+                  child.color === k ? "ring-black/20" : "ring-transparent"
+                }`}
+                aria-label={k}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        onClick={() => {
+          if (confirm(`Ta bort ${child.name}?`)) removeChild(child.id);
+        }}
+        className="text-xs text-zinc-400 hover:text-red-500"
+      >
+        Ta bort barn
+      </button>
     </div>
   );
 }

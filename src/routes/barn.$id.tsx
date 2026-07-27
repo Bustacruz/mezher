@@ -12,6 +12,7 @@ import {
 } from "@/lib/family-store";
 import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
 import type { RoutineSlot } from "@/lib/family-types";
+import { ChildAvatar } from "@/components/child-avatar";
 
 export const Route = createFileRoute("/barn/$id")({
   head: ({ params }) => ({
@@ -65,9 +66,7 @@ function BarnPage() {
         className={`${c.soft} ring-2 ${c.ring}/40 rounded-[32px] p-6 md:p-8`}
       >
         <div className="flex items-center gap-5 flex-wrap">
-          <div className="size-20 md:size-28 rounded-full bg-white grid place-items-center text-5xl md:text-6xl shadow-sm ring-4 ring-white/70 shrink-0">
-            {child.emoji}
-          </div>
+          <ChildAvatar child={child} size={128} className="shrink-0" />
           <div className="min-w-0 flex-1">
             <p className={`text-xs font-bold uppercase tracking-widest ${c.text}`}>
               Din dag
