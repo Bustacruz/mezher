@@ -15,6 +15,7 @@ import {
 import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
 import type { Child, RoutineSlot, Task } from "@/lib/family-types";
 import { fireConfetti } from "@/lib/confetti";
+import { ChildAvatar } from "@/components/child-avatar";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -123,9 +124,7 @@ function ChildColumn({ child }: { child: Child }) {
         className="flex items-center gap-3 group"
       >
         <div className="relative shrink-0">
-          <div className="size-14 md:size-16 rounded-full bg-white grid place-items-center text-3xl md:text-4xl shadow-sm ring-4 ring-white/60">
-            {child.emoji}
-          </div>
+          <ChildAvatar child={child} size={88} className="ring-white/70" />
           {streak > 0 && (
             <div className="absolute -bottom-1 -right-1 bg-white ring-1 ring-black/5 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
               🔥 {streak}
@@ -134,7 +133,7 @@ function ChildColumn({ child }: { child: Child }) {
         </div>
         <div className="min-w-0 flex-1">
           <h3
-            className={`font-semibold font-display text-lg ${c.text} truncate group-hover:underline`}
+            className={`font-semibold font-display text-xl md:text-2xl ${c.text} truncate group-hover:underline`}
           >
             {child.name}
           </h3>
@@ -193,21 +192,21 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
   };
 
   const base =
-    "w-full flex items-center gap-3 rounded-2xl p-2.5 pr-3 text-left transition-transform active:scale-[0.98]";
+    "w-full flex items-center gap-3 rounded-2xl p-3 pr-3 text-left transition-transform active:scale-[0.98]";
 
   if (done) {
     return (
       <div className={`${base} bg-white/60 opacity-60`}>
-        <div className="size-10 rounded-xl bg-white grid place-items-center text-xl">
+        <div className="size-14 rounded-2xl bg-white grid place-items-center text-3xl">
           {task.emoji}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold line-through text-zinc-500 truncate">
+          <p className="text-base font-semibold line-through text-zinc-500 truncate">
             {task.title}
           </p>
           <p className="text-[11px] text-zinc-400">+{task.points} ⭐</p>
         </div>
-        <span className="text-green-600 text-lg">✅</span>
+        <span className="text-green-600 text-2xl">✅</span>
       </div>
     );
   }
@@ -215,14 +214,14 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
   if (pending) {
     return (
       <div className={`${base} bg-amber-50 ring-1 ring-amber-200`}>
-        <div className="size-10 rounded-xl bg-white grid place-items-center text-xl">
+        <div className="size-14 rounded-2xl bg-white grid place-items-center text-3xl">
           {task.emoji}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold truncate">{task.title}</p>
+          <p className="text-base font-semibold truncate">{task.title}</p>
           <p className="text-[11px] text-amber-700">Väntar på förälder</p>
         </div>
-        <span className="text-amber-600 text-lg">⏳</span>
+        <span className="text-amber-600 text-2xl">⏳</span>
       </div>
     );
   }
@@ -232,15 +231,15 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
       onClick={handle}
       className={`${base} bg-white hover:bg-white ring-1 ring-black/5 shadow-sm ${justDone ? "animate-pop-in" : ""}`}
     >
-      <div className="size-10 rounded-xl bg-white ring-1 ring-black/5 grid place-items-center text-xl">
+      <div className="size-14 rounded-2xl bg-white ring-1 ring-black/5 grid place-items-center text-3xl">
         {task.emoji}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold truncate">{task.title}</p>
+        <p className="text-base font-semibold truncate">{task.title}</p>
         <p className={`text-[11px] font-bold ${c.text}`}>+{task.points} ⭐</p>
       </div>
       <span
-        className={`${c.bg} text-white text-sm font-bold rounded-full size-9 grid place-items-center shrink-0 shadow`}
+        className={`${c.bg} text-white text-lg font-bold rounded-full size-11 grid place-items-center shrink-0 shadow`}
       >
         ✓
       </span>
