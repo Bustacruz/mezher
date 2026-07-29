@@ -334,7 +334,74 @@ function applyCompletion(
       };
     }),
     familyPoints: s.familyPoints + task.points,
+    lifetimeStars: s.lifetimeStars + task.points,
   };
+}
+
+/** Ångra en avbockad uppgift (t.ex. felklick) – tar tillbaka poängen. */
+export function uncompleteTask(taskId: string, childId: string, date?: string) {
+  set((s) => {
+    const task = s.tasks.find((t) => t.id === taskId);
+    if (!task) return s;
+    const d = date ?? today();
+    const key = taskDoneKey(taskId, childId, d);
+    if (!task.completedDates.includes(key)) return s;
+    return {
+      ...s,
+      tasks: s.tasks.map((tt) =>
+        tt.id === taskId
+          ? {
+              ...tt,
+              completedDates: tt.completedDates.filter((k) => k !== key),
+            }
+          : tt,
+      ),
+      children: s.children.map((c) => {
+        if (c.id !== childId) return c;
+        const idx = c.history
+          .map((h, i) => ({ h, i }))
+          .filter(({ h }) => h.taskId === taskId && h.date === d)
+          .pop()?.i;
+        const history =
+          idx === undefined
+            ? c.history
+            : c.history.filter((_, i) => i !== idx);
+        const streak = c.streaks[taskId];
+        return {
+          ...c,
+          points: Math.max(0, c.points - task.points),
+          history,
+          streaks: streak
+            ? {
+                ...c.streaks,
+                [taskId]: {
+                  ...streak,
+                  current: Math.max(0, streak.current - 1),
+                  lastDay: null,
+                },
+              }
+            : c.streaks,
+        };
+      }),
+      familyPoints: Math.max(0, s.familyPoints - task.points),
+      lifetimeStars: Math.max(0, s.lifetimeStars - task.points),
+    };
+  });
+}
+
+/** Alla avbockningar idag, för föräldraläget. */
+export function completedToday(
+  s: FamilyState,
+): { task: Task; childId: string }[] {
+  const d = today();
+  const out: { task: Task; childId: string }[] = [];
+  for (const t of s.tasks) {
+    for (const key of t.completedDates) {
+      const [tid, childId, date] = key.split(":");
+      if (tid === t.id && date === d) out.push({ task: t, childId });
+    }
+  }
+  return out;
 }
 
 export function approvePending(taskId: string, childId: string) {
@@ -361,6 +428,12 @@ export function rejectPending(taskId: string, childId: string) {
 export function addReward(r: Omit<Reward, "id">) {
   set((s) => ({ ...s, rewards: [...s.rewards, { ...r, id: uid() }] }));
 }
+export function updateReward(id: string, patch: Partial<Reward>) {
+  set((s) => ({
+    ...s,
+    rewards: s.rewards.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+  }));
+}
 export function removeReward(id: string) {
   set((s) => ({ ...s, rewards: s.rewards.filter((r) => r.id !== id) }));
 }
@@ -386,6 +459,12 @@ export function addGoal(g: Omit<FamilyGoal, "id" | "progress">) {
 }
 export function removeGoal(id: string) {
   set((s) => ({ ...s, goals: s.goals.filter((g) => g.id !== id) }));
+}
+export function updateGoal(id: string, patch: Partial<FamilyGoal>) {
+  set((s) => ({
+    ...s,
+    goals: s.goals.map((g) => (g.id === id ? { ...g, ...patch } : g)),
+  }));
 }
 export function contributeToGoal(goalId: string, amount: number) {
   set((s) => ({
