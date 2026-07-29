@@ -128,7 +128,7 @@ function defaultState(): FamilyState {
       },
     ],
     lifetimeStars: 655,
-    seenHouseLevel: 0,
+    seenHouseLevel: houseLevelFor(655).level,
     parentPin: "1234",
   };
 }
@@ -149,12 +149,13 @@ function load(): FamilyState {
 
 function migrate(s: Partial<FamilyState>): FamilyState {
   const base = defaultState();
+  const lifetimeStars = s.lifetimeStars ?? s.familyPoints ?? base.lifetimeStars;
   return {
     ...base,
     ...s,
     challenges: s.challenges ?? base.challenges,
-    lifetimeStars: s.lifetimeStars ?? s.familyPoints ?? base.lifetimeStars,
-    seenHouseLevel: s.seenHouseLevel ?? 0,
+    lifetimeStars,
+    seenHouseLevel: s.seenHouseLevel ?? houseLevelFor(lifetimeStars).level,
     parentPin: s.parentPin ?? base.parentPin,
   };
 }
