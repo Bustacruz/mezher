@@ -1,11 +1,14 @@
 import { useSyncExternalStore } from "react";
 import type {
+  Challenge,
   Child,
   FamilyGoal,
   FamilyState,
+  MedalLevel,
   Reward,
   Task,
 } from "./family-types";
+import { houseLevelFor } from "./house";
 
 const STORAGE_KEY = "var-familj-v1";
 
@@ -89,6 +92,44 @@ function defaultState(): FamilyState {
     rewards,
     goals,
     familyPoints: 655,
+    challenges: [
+      {
+        id: uid(),
+        title: "Veckans stjärnsamlare",
+        emoji: "⭐",
+        childId: "all",
+        metric: "poang",
+        period: "vecka",
+        bronze: 100,
+        silver: 250,
+        gold: 500,
+      },
+      {
+        id: uid(),
+        title: "Rutinmästare",
+        emoji: "🎯",
+        childId: "all",
+        metric: "uppgifter",
+        period: "vecka",
+        bronze: 10,
+        silver: 25,
+        gold: 50,
+      },
+      {
+        id: uid(),
+        title: "Eldsjäl",
+        emoji: "🔥",
+        childId: "all",
+        metric: "streak",
+        period: "total",
+        bronze: 3,
+        silver: 7,
+        gold: 14,
+      },
+    ],
+    lifetimeStars: 655,
+    seenHouseLevel: 0,
+    parentPin: "1234",
   };
 }
 
@@ -100,10 +141,22 @@ function load(): FamilyState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
-    return JSON.parse(raw) as FamilyState;
+    return migrate(JSON.parse(raw) as Partial<FamilyState>);
   } catch {
     return defaultState();
   }
+}
+
+function migrate(s: Partial<FamilyState>): FamilyState {
+  const base = defaultState();
+  return {
+    ...base,
+    ...s,
+    challenges: s.challenges ?? base.challenges,
+    lifetimeStars: s.lifetimeStars ?? s.familyPoints ?? base.lifetimeStars,
+    seenHouseLevel: s.seenHouseLevel ?? 0,
+    parentPin: s.parentPin ?? base.parentPin,
+  };
 }
 
 function save() {
