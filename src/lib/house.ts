@@ -76,7 +76,7 @@ export const HOUSE_LEVELS: HouseLevel[] = Array.from(
     const u = UNLOCKS[i % UNLOCKS.length];
     return {
       level,
-      threshold: Math.round((250 * Math.pow(level, 1.8)) / 50) * 50,
+      threshold: Math.round((250 * Math.pow(level, 1.55)) / 50) * 50,
       stage: st.name,
       stageEmoji: st.emoji,
       unlockEmoji: u.emoji,
