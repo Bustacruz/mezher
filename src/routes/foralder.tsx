@@ -3,26 +3,38 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   addChild,
+  addChallenge,
   addGoal,
   addReward,
   addTask,
   approvePending,
+  checkParentPin,
+  completedToday,
   contributeToGoal,
   rejectPending,
+  removeChallenge,
   removeChild,
   removeGoal,
   removeReward,
   removeTask,
   resetFamily,
+  setParentPin,
+  uncompleteTask,
+  updateChallenge,
   updateChild,
+  updateGoal,
+  updateReward,
   useFamily,
 } from "@/lib/family-store";
 import type {
+  Challenge,
+  ChallengeMetric,
+  ChallengePeriod,
   Frequency,
   KidColor,
   RoutineSlot,
 } from "@/lib/family-types";
-import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
+import { COLOR_MAP, METRIC_LABEL, PERIOD_LABEL, SLOT_LABEL } from "@/lib/family-types";
 import { ChildAvatar, fileToCompressedDataUrl } from "@/components/child-avatar";
 
 export const Route = createFileRoute("/foralder")({
@@ -44,13 +56,30 @@ const EMOJIS = ["👧", "🧒", "👦", "🧑", "🦄", "🐻", "🦊", "🐼", 
 
 function ForalderPage() {
   const state = useFamily();
+  const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<
-    "barn" | "uppgifter" | "beloningar" | "godkann" | "mal" | "statistik"
+    | "barn"
+    | "uppgifter"
+    | "beloningar"
+    | "godkann"
+    | "angra"
+    | "utmaningar"
+    | "mal"
+    | "statistik"
+    | "kod"
   >("barn");
 
   const pending = state.tasks.flatMap((t) =>
     t.pendingApproval.map((p) => ({ task: t, ...p })),
   );
+
+  if (!unlocked) {
+    return (
+      <AppShell>
+        <PinGate onUnlock={() => setUnlocked(true)} />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -70,8 +99,11 @@ function ForalderPage() {
             ["uppgifter", "🎯 Uppgifter"],
             ["beloningar", "🎁 Belöningar"],
             ["godkann", `✅ Godkänn${pending.length ? ` (${pending.length})` : ""}`],
+            ["angra", "↩️ Ångra avbockning"],
+            ["utmaningar", "🏅 Utmaningar"],
             ["mal", "🏆 Familjemål"],
             ["statistik", "📊 Statistik"],
+            ["kod", "🔒 Kod"],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -105,6 +137,9 @@ function ForalderPage() {
         />
       )}
       {tab === "mal" && <MalTab state={state} />}
+      {tab === "angra" && <AngraTab state={state} />}
+      {tab === "utmaningar" && <UtmaningarTab state={state} />}
+      {tab === "kod" && <KodTab />}
       {tab === "statistik" && <StatistikTab state={state} />}
 
       <div className="pt-8 border-t border-zinc-950/5">
