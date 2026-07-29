@@ -526,11 +526,44 @@ function BeloningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
           {state.rewards.map((r) => (
             <div
               key={r.id}
-              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-2 text-center"
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-2"
             >
-              <div className="text-4xl">{r.emoji}</div>
-              <p className="font-semibold text-sm">{r.title}</p>
-              <p className="text-xs font-bold text-accent">{r.cost} ⭐</p>
+              <input
+                value={r.emoji}
+                maxLength={4}
+                onChange={(e) => updateReward(r.id, { emoji: e.target.value })}
+                className="w-full text-5xl text-center bg-card-soft rounded-xl py-2"
+              />
+              <input
+                value={r.title}
+                onChange={(e) => updateReward(r.id, { title: e.target.value })}
+                className={`${input} font-semibold text-sm`}
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={r.cost}
+                  onChange={(e) =>
+                    updateReward(r.id, { cost: parseInt(e.target.value) || 0 })
+                  }
+                  className={`${input} flex-1`}
+                />
+                <select
+                  value={r.childId}
+                  onChange={(e) =>
+                    updateReward(r.id, { childId: e.target.value })
+                  }
+                  className={`${input} flex-1`}
+                >
+                  <option value="all">Alla</option>
+                  {state.children.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 onClick={() => removeReward(r.id)}
                 className="text-[11px] text-zinc-400 hover:text-red-500"
@@ -669,14 +702,40 @@ function MalTab({ state }: { state: ReturnType<typeof useFamily> }) {
           {state.goals.map((g) => (
             <div
               key={g.id}
-              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex items-center gap-4"
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex flex-wrap items-center gap-3"
             >
-              <div className="text-3xl">{g.emoji}</div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold">{g.title}</p>
-                <p className="text-xs text-zinc-500">
-                  {g.progress} / {g.target} ⭐
-                </p>
+              <input
+                value={g.emoji}
+                maxLength={4}
+                onChange={(e) => updateGoal(g.id, { emoji: e.target.value })}
+                className="size-14 text-3xl text-center bg-card-soft rounded-xl shrink-0"
+              />
+              <input
+                value={g.title}
+                onChange={(e) => updateGoal(g.id, { title: e.target.value })}
+                className={`${input} flex-1 min-w-40 font-semibold`}
+              />
+              <div className="flex items-center gap-2">
+                <Field label="Klart">
+                  <input
+                    type="number"
+                    value={g.progress}
+                    onChange={(e) =>
+                      updateGoal(g.id, { progress: parseInt(e.target.value) || 0 })
+                    }
+                    className={`${input} w-24`}
+                  />
+                </Field>
+                <Field label="Mål">
+                  <input
+                    type="number"
+                    value={g.target}
+                    onChange={(e) =>
+                      updateGoal(g.id, { target: parseInt(e.target.value) || 1 })
+                    }
+                    className={`${input} w-24`}
+                  />
+                </Field>
               </div>
               <button
                 onClick={() => contributeToGoal(g.id, 50)}
