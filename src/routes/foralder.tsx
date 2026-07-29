@@ -3,26 +3,38 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   addChild,
+  addChallenge,
   addGoal,
   addReward,
   addTask,
   approvePending,
+  checkParentPin,
+  completedToday,
   contributeToGoal,
   rejectPending,
+  removeChallenge,
   removeChild,
   removeGoal,
   removeReward,
   removeTask,
   resetFamily,
+  setParentPin,
+  uncompleteTask,
+  updateChallenge,
   updateChild,
+  updateGoal,
+  updateReward,
   useFamily,
 } from "@/lib/family-store";
 import type {
+  Challenge,
+  ChallengeMetric,
+  ChallengePeriod,
   Frequency,
   KidColor,
   RoutineSlot,
 } from "@/lib/family-types";
-import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
+import { COLOR_MAP, METRIC_LABEL, PERIOD_LABEL, SLOT_LABEL } from "@/lib/family-types";
 import { ChildAvatar, fileToCompressedDataUrl } from "@/components/child-avatar";
 
 export const Route = createFileRoute("/foralder")({
@@ -44,13 +56,30 @@ const EMOJIS = ["👧", "🧒", "👦", "🧑", "🦄", "🐻", "🦊", "🐼", 
 
 function ForalderPage() {
   const state = useFamily();
+  const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<
-    "barn" | "uppgifter" | "beloningar" | "godkann" | "mal" | "statistik"
+    | "barn"
+    | "uppgifter"
+    | "beloningar"
+    | "godkann"
+    | "angra"
+    | "utmaningar"
+    | "mal"
+    | "statistik"
+    | "kod"
   >("barn");
 
   const pending = state.tasks.flatMap((t) =>
     t.pendingApproval.map((p) => ({ task: t, ...p })),
   );
+
+  if (!unlocked) {
+    return (
+      <AppShell>
+        <PinGate onUnlock={() => setUnlocked(true)} />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -70,8 +99,11 @@ function ForalderPage() {
             ["uppgifter", "🎯 Uppgifter"],
             ["beloningar", "🎁 Belöningar"],
             ["godkann", `✅ Godkänn${pending.length ? ` (${pending.length})` : ""}`],
+            ["angra", "↩️ Ångra avbockning"],
+            ["utmaningar", "🏅 Utmaningar"],
             ["mal", "🏆 Familjemål"],
             ["statistik", "📊 Statistik"],
+            ["kod", "🔒 Kod"],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -105,6 +137,9 @@ function ForalderPage() {
         />
       )}
       {tab === "mal" && <MalTab state={state} />}
+      {tab === "angra" && <AngraTab state={state} />}
+      {tab === "utmaningar" && <UtmaningarTab state={state} />}
+      {tab === "kod" && <KodTab />}
       {tab === "statistik" && <StatistikTab state={state} />}
 
       <div className="pt-8 border-t border-zinc-950/5">
@@ -491,11 +526,44 @@ function BeloningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
           {state.rewards.map((r) => (
             <div
               key={r.id}
-              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-2 text-center"
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-2"
             >
-              <div className="text-4xl">{r.emoji}</div>
-              <p className="font-semibold text-sm">{r.title}</p>
-              <p className="text-xs font-bold text-accent">{r.cost} ⭐</p>
+              <input
+                value={r.emoji}
+                maxLength={4}
+                onChange={(e) => updateReward(r.id, { emoji: e.target.value })}
+                className="w-full text-5xl text-center bg-card-soft rounded-xl py-2"
+              />
+              <input
+                value={r.title}
+                onChange={(e) => updateReward(r.id, { title: e.target.value })}
+                className={`${input} font-semibold text-sm`}
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={r.cost}
+                  onChange={(e) =>
+                    updateReward(r.id, { cost: parseInt(e.target.value) || 0 })
+                  }
+                  className={`${input} flex-1`}
+                />
+                <select
+                  value={r.childId}
+                  onChange={(e) =>
+                    updateReward(r.id, { childId: e.target.value })
+                  }
+                  className={`${input} flex-1`}
+                >
+                  <option value="all">Alla</option>
+                  {state.children.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 onClick={() => removeReward(r.id)}
                 className="text-[11px] text-zinc-400 hover:text-red-500"
@@ -634,14 +702,40 @@ function MalTab({ state }: { state: ReturnType<typeof useFamily> }) {
           {state.goals.map((g) => (
             <div
               key={g.id}
-              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex items-center gap-4"
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex flex-wrap items-center gap-3"
             >
-              <div className="text-3xl">{g.emoji}</div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold">{g.title}</p>
-                <p className="text-xs text-zinc-500">
-                  {g.progress} / {g.target} ⭐
-                </p>
+              <input
+                value={g.emoji}
+                maxLength={4}
+                onChange={(e) => updateGoal(g.id, { emoji: e.target.value })}
+                className="size-14 text-3xl text-center bg-card-soft rounded-xl shrink-0"
+              />
+              <input
+                value={g.title}
+                onChange={(e) => updateGoal(g.id, { title: e.target.value })}
+                className={`${input} flex-1 min-w-40 font-semibold`}
+              />
+              <div className="flex items-center gap-2">
+                <Field label="Klart">
+                  <input
+                    type="number"
+                    value={g.progress}
+                    onChange={(e) =>
+                      updateGoal(g.id, { progress: parseInt(e.target.value) || 0 })
+                    }
+                    className={`${input} w-24`}
+                  />
+                </Field>
+                <Field label="Mål">
+                  <input
+                    type="number"
+                    value={g.target}
+                    onChange={(e) =>
+                      updateGoal(g.id, { target: parseInt(e.target.value) || 1 })
+                    }
+                    className={`${input} w-24`}
+                  />
+                </Field>
               </div>
               <button
                 onClick={() => contributeToGoal(g.id, 50)}
@@ -726,6 +820,386 @@ function StatBox({ label, value }: { label: string; value: number }) {
         {label}
       </p>
       <p className="text-3xl font-bold font-display text-brand">{value}</p>
+    </div>
+  );
+}
+
+function PinGate({ onUnlock }: { onUnlock: () => void }) {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState(false);
+
+  const press = (d: string) => {
+    const next = (pin + d).slice(0, 6);
+    setPin(next);
+    setError(false);
+  };
+
+  const submit = () => {
+    if (checkParentPin(pin)) onUnlock();
+    else {
+      setError(true);
+      setPin("");
+    }
+  };
+
+  return (
+    <div className="max-w-sm mx-auto bg-white ring-1 ring-black/5 rounded-[32px] p-8 space-y-6 text-center">
+      <div className="text-7xl leading-none">🔒</div>
+      <div>
+        <h2 className="text-2xl font-semibold font-display">Föräldraläge</h2>
+        <p className="text-sm text-zinc-500">Ange föräldrakoden</p>
+      </div>
+      <div className="flex justify-center gap-2">
+        {Array.from({ length: Math.max(4, pin.length) }).map((_, i) => (
+          <span
+            key={i}
+            className={`size-4 rounded-full ${
+              i < pin.length ? "bg-brand" : "bg-zinc-200"
+            }`}
+          />
+        ))}
+      </div>
+      {error && (
+        <p className="text-sm font-semibold text-red-500">Fel kod, försök igen</p>
+      )}
+      <div className="grid grid-cols-3 gap-3">
+        {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+          <button
+            key={d}
+            onClick={() => press(d)}
+            className="bg-card-soft rounded-2xl py-4 text-2xl font-bold hover:bg-zinc-200"
+          >
+            {d}
+          </button>
+        ))}
+        <button
+          onClick={() => setPin("")}
+          className="bg-card-soft rounded-2xl py-4 text-xl"
+        >
+          ✖
+        </button>
+        <button
+          onClick={() => press("0")}
+          className="bg-card-soft rounded-2xl py-4 text-2xl font-bold hover:bg-zinc-200"
+        >
+          0
+        </button>
+        <button
+          onClick={submit}
+          className="bg-brand text-white rounded-2xl py-4 text-xl font-bold"
+        >
+          ✓
+        </button>
+      </div>
+      <p className="text-[11px] text-zinc-400">Standardkod är 1234</p>
+    </div>
+  );
+}
+
+function KodTab() {
+  const state = useFamily();
+  const [pin, setPin] = useState(state.parentPin);
+  const [saved, setSaved] = useState(false);
+
+  return (
+    <Section title="Föräldrakod">
+      <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 space-y-4 max-w-sm">
+        <Field label="Kod (4–6 siffror)">
+          <input
+            value={pin}
+            inputMode="numeric"
+            onChange={(e) => {
+              setPin(e.target.value.replace(/\D/g, "").slice(0, 6));
+              setSaved(false);
+            }}
+            className={input}
+          />
+        </Field>
+        <button
+          onClick={() => {
+            if (pin.length < 4) return;
+            setParentPin(pin);
+            setSaved(true);
+          }}
+          className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5"
+        >
+          Spara kod
+        </button>
+        {saved && <p className="text-sm text-green-600 font-semibold">Sparat ✅</p>}
+      </div>
+    </Section>
+  );
+}
+
+function AngraTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const items = completedToday(state);
+  if (items.length === 0) {
+    return (
+      <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-10 text-center space-y-2">
+        <div className="text-6xl">🙌</div>
+        <p className="font-semibold font-display text-lg">
+          Inga avbockade uppgifter idag
+        </p>
+      </div>
+    );
+  }
+  return (
+    <Section title="Avbockat idag – tryck för att ångra">
+      <div className="space-y-3">
+        {items.map(({ task, childId }) => {
+          const child = state.children.find((c) => c.id === childId);
+          return (
+            <div
+              key={`${task.id}-${childId}`}
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex items-center gap-4"
+            >
+              <div className="size-16 rounded-2xl bg-card-soft grid place-items-center text-4xl">
+                {task.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold truncate">{task.title}</p>
+                <p className="text-xs text-zinc-500">
+                  {child?.name ?? "?"} · +{task.points} ⭐
+                </p>
+              </div>
+              <button
+                onClick={() => uncompleteTask(task.id, childId)}
+                className="px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 font-semibold text-sm hover:bg-red-50 hover:text-red-600 shrink-0"
+              >
+                ↩️ Ångra
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
+function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const [draft, setDraft] = useState<Omit<Challenge, "id">>({
+    title: "",
+    emoji: "🏅",
+    childId: "all",
+    metric: "uppgifter",
+    period: "vecka",
+    bronze: 5,
+    silver: 15,
+    gold: 30,
+  });
+
+  return (
+    <div className="space-y-8">
+      <Section title="Alla utmaningar">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {state.challenges.map((ch) => (
+            <div
+              key={ch.id}
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-3"
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  value={ch.emoji}
+                  maxLength={4}
+                  onChange={(e) =>
+                    updateChallenge(ch.id, { emoji: e.target.value })
+                  }
+                  className="size-14 text-3xl text-center bg-card-soft rounded-xl"
+                />
+                <input
+                  value={ch.title}
+                  onChange={(e) =>
+                    updateChallenge(ch.id, { title: e.target.value })
+                  }
+                  className={`${input} font-semibold`}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={ch.metric}
+                  onChange={(e) =>
+                    updateChallenge(ch.id, {
+                      metric: e.target.value as ChallengeMetric,
+                    })
+                  }
+                  className={input}
+                >
+                  {(["uppgifter", "poang", "streak"] as ChallengeMetric[]).map(
+                    (m) => (
+                      <option key={m} value={m}>
+                        {METRIC_LABEL[m]}
+                      </option>
+                    ),
+                  )}
+                </select>
+                <select
+                  value={ch.period}
+                  onChange={(e) =>
+                    updateChallenge(ch.id, {
+                      period: e.target.value as ChallengePeriod,
+                    })
+                  }
+                  className={input}
+                >
+                  {(["vecka", "manad", "total"] as ChallengePeriod[]).map((p) => (
+                    <option key={p} value={p}>
+                      {PERIOD_LABEL[p]}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={ch.childId}
+                  onChange={(e) =>
+                    updateChallenge(ch.id, { childId: e.target.value })
+                  }
+                  className={`${input} col-span-2`}
+                >
+                  <option value="all">Alla barn</option>
+                  {state.children.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(["bronze", "silver", "gold"] as const).map((k) => (
+                  <Field
+                    key={k}
+                    label={k === "bronze" ? "🥉 Brons" : k === "silver" ? "🥈 Silver" : "🥇 Guld"}
+                  >
+                    <input
+                      type="number"
+                      value={ch[k]}
+                      min={1}
+                      onChange={(e) =>
+                        updateChallenge(ch.id, {
+                          [k]: parseInt(e.target.value) || 0,
+                        } as Partial<Challenge>)
+                      }
+                      className={input}
+                    />
+                  </Field>
+                ))}
+              </div>
+              <button
+                onClick={() => removeChallenge(ch.id)}
+                className="text-xs text-zinc-400 hover:text-red-500"
+              >
+                Ta bort utmaning
+              </button>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Skapa ny utmaning">
+        <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Field label="Titel">
+            <input
+              value={draft.title}
+              onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              className={input}
+              placeholder="T.ex. Läsmästaren"
+            />
+          </Field>
+          <Field label="Emoji">
+            <input
+              value={draft.emoji}
+              maxLength={4}
+              onChange={(e) => setDraft({ ...draft, emoji: e.target.value })}
+              className={input}
+            />
+          </Field>
+          <Field label="För vem">
+            <select
+              value={draft.childId}
+              onChange={(e) => setDraft({ ...draft, childId: e.target.value })}
+              className={input}
+            >
+              <option value="all">Alla barn</option>
+              {state.children.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Mäter">
+            <select
+              value={draft.metric}
+              onChange={(e) =>
+                setDraft({ ...draft, metric: e.target.value as ChallengeMetric })
+              }
+              className={input}
+            >
+              {(["uppgifter", "poang", "streak"] as ChallengeMetric[]).map((m) => (
+                <option key={m} value={m}>
+                  {METRIC_LABEL[m]}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Period">
+            <select
+              value={draft.period}
+              onChange={(e) =>
+                setDraft({ ...draft, period: e.target.value as ChallengePeriod })
+              }
+              className={input}
+            >
+              {(["vecka", "manad", "total"] as ChallengePeriod[]).map((p) => (
+                <option key={p} value={p}>
+                  {PERIOD_LABEL[p]}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <div />
+          <Field label="🥉 Brons">
+            <input
+              type="number"
+              value={draft.bronze}
+              onChange={(e) =>
+                setDraft({ ...draft, bronze: parseInt(e.target.value) || 0 })
+              }
+              className={input}
+            />
+          </Field>
+          <Field label="🥈 Silver">
+            <input
+              type="number"
+              value={draft.silver}
+              onChange={(e) =>
+                setDraft({ ...draft, silver: parseInt(e.target.value) || 0 })
+              }
+              className={input}
+            />
+          </Field>
+          <Field label="🥇 Guld">
+            <input
+              type="number"
+              value={draft.gold}
+              onChange={(e) =>
+                setDraft({ ...draft, gold: parseInt(e.target.value) || 0 })
+              }
+              className={input}
+            />
+          </Field>
+          <div className="md:col-span-3">
+            <button
+              onClick={() => {
+                if (!draft.title.trim()) return;
+                addChallenge({ ...draft, title: draft.title.trim() });
+                setDraft({ ...draft, title: "" });
+              }}
+              className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5"
+            >
+              + Lägg till utmaning
+            </button>
+          </div>
+        </div>
+      </Section>
     </div>
   );
 }

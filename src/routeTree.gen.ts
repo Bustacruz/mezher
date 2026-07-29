@@ -9,14 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UtmaningarRouteImport } from './routes/utmaningar'
 import { Route as MalRouteImport } from './routes/mal'
+import { Route as HusetRouteImport } from './routes/huset'
 import { Route as ForalderRouteImport } from './routes/foralder'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BarnIdRouteImport } from './routes/barn.$id'
 
+const UtmaningarRoute = UtmaningarRouteImport.update({
+  id: '/utmaningar',
+  path: '/utmaningar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MalRoute = MalRouteImport.update({
   id: '/mal',
   path: '/mal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HusetRoute = HusetRouteImport.update({
+  id: '/huset',
+  path: '/huset',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForalderRoute = ForalderRouteImport.update({
@@ -38,44 +50,73 @@ const BarnIdRoute = BarnIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/foralder': typeof ForalderRoute
+  '/huset': typeof HusetRoute
   '/mal': typeof MalRoute
+  '/utmaningar': typeof UtmaningarRoute
   '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/foralder': typeof ForalderRoute
+  '/huset': typeof HusetRoute
   '/mal': typeof MalRoute
+  '/utmaningar': typeof UtmaningarRoute
   '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/foralder': typeof ForalderRoute
+  '/huset': typeof HusetRoute
   '/mal': typeof MalRoute
+  '/utmaningar': typeof UtmaningarRoute
   '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/foralder' | '/mal' | '/barn/$id'
+  fullPaths: '/' | '/foralder' | '/huset' | '/mal' | '/utmaningar' | '/barn/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/foralder' | '/mal' | '/barn/$id'
-  id: '__root__' | '/' | '/foralder' | '/mal' | '/barn/$id'
+  to: '/' | '/foralder' | '/huset' | '/mal' | '/utmaningar' | '/barn/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/foralder'
+    | '/huset'
+    | '/mal'
+    | '/utmaningar'
+    | '/barn/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ForalderRoute: typeof ForalderRoute
+  HusetRoute: typeof HusetRoute
   MalRoute: typeof MalRoute
+  UtmaningarRoute: typeof UtmaningarRoute
   BarnIdRoute: typeof BarnIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/utmaningar': {
+      id: '/utmaningar'
+      path: '/utmaningar'
+      fullPath: '/utmaningar'
+      preLoaderRoute: typeof UtmaningarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mal': {
       id: '/mal'
       path: '/mal'
       fullPath: '/mal'
       preLoaderRoute: typeof MalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/huset': {
+      id: '/huset'
+      path: '/huset'
+      fullPath: '/huset'
+      preLoaderRoute: typeof HusetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/foralder': {
@@ -105,7 +146,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ForalderRoute: ForalderRoute,
+  HusetRoute: HusetRoute,
   MalRoute: MalRoute,
+  UtmaningarRoute: UtmaningarRoute,
   BarnIdRoute: BarnIdRoute,
 }
 export const routeTree = rootRouteImport

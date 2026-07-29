@@ -1,11 +1,14 @@
 import { useSyncExternalStore } from "react";
 import type {
+  Challenge,
   Child,
   FamilyGoal,
   FamilyState,
+  MedalLevel,
   Reward,
   Task,
 } from "./family-types";
+import { houseLevelFor } from "./house";
 
 const STORAGE_KEY = "var-familj-v1";
 
@@ -89,6 +92,44 @@ function defaultState(): FamilyState {
     rewards,
     goals,
     familyPoints: 655,
+    challenges: [
+      {
+        id: uid(),
+        title: "Veckans stjärnsamlare",
+        emoji: "⭐",
+        childId: "all",
+        metric: "poang",
+        period: "vecka",
+        bronze: 100,
+        silver: 250,
+        gold: 500,
+      },
+      {
+        id: uid(),
+        title: "Rutinmästare",
+        emoji: "🎯",
+        childId: "all",
+        metric: "uppgifter",
+        period: "vecka",
+        bronze: 10,
+        silver: 25,
+        gold: 50,
+      },
+      {
+        id: uid(),
+        title: "Eldsjäl",
+        emoji: "🔥",
+        childId: "all",
+        metric: "streak",
+        period: "total",
+        bronze: 3,
+        silver: 7,
+        gold: 14,
+      },
+    ],
+    lifetimeStars: 655,
+    seenHouseLevel: houseLevelFor(655),
+    parentPin: "1234",
   };
 }
 
@@ -100,10 +141,23 @@ function load(): FamilyState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
-    return JSON.parse(raw) as FamilyState;
+    return migrate(JSON.parse(raw) as Partial<FamilyState>);
   } catch {
     return defaultState();
   }
+}
+
+function migrate(s: Partial<FamilyState>): FamilyState {
+  const base = defaultState();
+  const lifetimeStars = s.lifetimeStars ?? s.familyPoints ?? base.lifetimeStars;
+  return {
+    ...base,
+    ...s,
+    challenges: s.challenges ?? base.challenges,
+    lifetimeStars,
+    seenHouseLevel: s.seenHouseLevel ?? houseLevelFor(lifetimeStars),
+    parentPin: s.parentPin ?? base.parentPin,
+  };
 }
 
 function save() {
@@ -281,7 +335,74 @@ function applyCompletion(
       };
     }),
     familyPoints: s.familyPoints + task.points,
+    lifetimeStars: s.lifetimeStars + task.points,
   };
+}
+
+/** Ångra en avbockad uppgift (t.ex. felklick) – tar tillbaka poängen. */
+export function uncompleteTask(taskId: string, childId: string, date?: string) {
+  set((s) => {
+    const task = s.tasks.find((t) => t.id === taskId);
+    if (!task) return s;
+    const d = date ?? today();
+    const key = taskDoneKey(taskId, childId, d);
+    if (!task.completedDates.includes(key)) return s;
+    return {
+      ...s,
+      tasks: s.tasks.map((tt) =>
+        tt.id === taskId
+          ? {
+              ...tt,
+              completedDates: tt.completedDates.filter((k) => k !== key),
+            }
+          : tt,
+      ),
+      children: s.children.map((c) => {
+        if (c.id !== childId) return c;
+        const idx = c.history
+          .map((h, i) => ({ h, i }))
+          .filter(({ h }) => h.taskId === taskId && h.date === d)
+          .pop()?.i;
+        const history =
+          idx === undefined
+            ? c.history
+            : c.history.filter((_, i) => i !== idx);
+        const streak = c.streaks[taskId];
+        return {
+          ...c,
+          points: Math.max(0, c.points - task.points),
+          history,
+          streaks: streak
+            ? {
+                ...c.streaks,
+                [taskId]: {
+                  ...streak,
+                  current: Math.max(0, streak.current - 1),
+                  lastDay: null,
+                },
+              }
+            : c.streaks,
+        };
+      }),
+      familyPoints: Math.max(0, s.familyPoints - task.points),
+      lifetimeStars: Math.max(0, s.lifetimeStars - task.points),
+    };
+  });
+}
+
+/** Alla avbockningar idag, för föräldraläget. */
+export function completedToday(
+  s: FamilyState,
+): { task: Task; childId: string }[] {
+  const d = today();
+  const out: { task: Task; childId: string }[] = [];
+  for (const t of s.tasks) {
+    for (const key of t.completedDates) {
+      const [tid, childId, date] = key.split(":");
+      if (tid === t.id && date === d) out.push({ task: t, childId });
+    }
+  }
+  return out;
 }
 
 export function approvePending(taskId: string, childId: string) {
@@ -308,6 +429,12 @@ export function rejectPending(taskId: string, childId: string) {
 export function addReward(r: Omit<Reward, "id">) {
   set((s) => ({ ...s, rewards: [...s.rewards, { ...r, id: uid() }] }));
 }
+export function updateReward(id: string, patch: Partial<Reward>) {
+  set((s) => ({
+    ...s,
+    rewards: s.rewards.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+  }));
+}
 export function removeReward(id: string) {
   set((s) => ({ ...s, rewards: s.rewards.filter((r) => r.id !== id) }));
 }
@@ -333,6 +460,12 @@ export function addGoal(g: Omit<FamilyGoal, "id" | "progress">) {
 }
 export function removeGoal(id: string) {
   set((s) => ({ ...s, goals: s.goals.filter((g) => g.id !== id) }));
+}
+export function updateGoal(id: string, patch: Partial<FamilyGoal>) {
+  set((s) => ({
+    ...s,
+    goals: s.goals.map((g) => (g.id === id ? { ...g, ...patch } : g)),
+  }));
 }
 export function contributeToGoal(goalId: string, amount: number) {
   set((s) => ({
@@ -392,4 +525,83 @@ export function progressToday(
   );
   const done = list.filter((t) => isTaskDoneToday(t, childId)).length;
   return { done, total: list.length };
+}
+
+// ---------- Utmaningar ----------
+export function addChallenge(c: Omit<Challenge, "id">) {
+  set((s) => ({ ...s, challenges: [...s.challenges, { ...c, id: uid() }] }));
+}
+export function updateChallenge(id: string, patch: Partial<Challenge>) {
+  set((s) => ({
+    ...s,
+    challenges: s.challenges.map((c) =>
+      c.id === id ? { ...c, ...patch } : c,
+    ),
+  }));
+}
+export function removeChallenge(id: string) {
+  set((s) => ({ ...s, challenges: s.challenges.filter((c) => c.id !== id) }));
+}
+
+function periodStart(period: Challenge["period"]): string {
+  if (period === "total") return "0000-00-00";
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - (period === "vecka" ? 6 : 29));
+  return start.toISOString().slice(0, 10);
+}
+
+export function challengeValue(c: Challenge, child: Child): number {
+  if (c.metric === "streak") return bestStreak(child);
+  const from = periodStart(c.period);
+  const rows = child.history.filter((h) => h.date >= from);
+  return c.metric === "poang"
+    ? rows.reduce((sum, h) => sum + h.points, 0)
+    : rows.length;
+}
+
+export function challengeMedal(
+  c: Challenge,
+  child: Child,
+): { value: number; medal: MedalLevel | null; next: number | null } {
+  const value = challengeValue(c, child);
+  const medal: MedalLevel | null =
+    value >= c.gold
+      ? "guld"
+      : value >= c.silver
+        ? "silver"
+        : value >= c.bronze
+          ? "brons"
+          : null;
+  const next =
+    value < c.bronze
+      ? c.bronze
+      : value < c.silver
+        ? c.silver
+        : value < c.gold
+          ? c.gold
+          : null;
+  return { value, medal, next };
+}
+
+export function challengesForChild(s: FamilyState, childId: string) {
+  return s.challenges.filter(
+    (c) => c.childId === "all" || c.childId === childId,
+  );
+}
+
+// ---------- Huset ----------
+export function currentHouseLevel(s: FamilyState): number {
+  return houseLevelFor(s.lifetimeStars);
+}
+export function markHouseLevelSeen(level: number) {
+  set((s) => ({ ...s, seenHouseLevel: Math.max(s.seenHouseLevel, level) }));
+}
+
+// ---------- Föräldrakod ----------
+export function setParentPin(pin: string) {
+  set((s) => ({ ...s, parentPin: pin }));
+}
+export function checkParentPin(pin: string): boolean {
+  return state.parentPin === pin;
 }
