@@ -525,3 +525,82 @@ export function progressToday(
   const done = list.filter((t) => isTaskDoneToday(t, childId)).length;
   return { done, total: list.length };
 }
+
+// ---------- Utmaningar ----------
+export function addChallenge(c: Omit<Challenge, "id">) {
+  set((s) => ({ ...s, challenges: [...s.challenges, { ...c, id: uid() }] }));
+}
+export function updateChallenge(id: string, patch: Partial<Challenge>) {
+  set((s) => ({
+    ...s,
+    challenges: s.challenges.map((c) =>
+      c.id === id ? { ...c, ...patch } : c,
+    ),
+  }));
+}
+export function removeChallenge(id: string) {
+  set((s) => ({ ...s, challenges: s.challenges.filter((c) => c.id !== id) }));
+}
+
+function periodStart(period: Challenge["period"]): string {
+  if (period === "total") return "0000-00-00";
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - (period === "vecka" ? 6 : 29));
+  return start.toISOString().slice(0, 10);
+}
+
+export function challengeValue(c: Challenge, child: Child): number {
+  if (c.metric === "streak") return bestStreak(child);
+  const from = periodStart(c.period);
+  const rows = child.history.filter((h) => h.date >= from);
+  return c.metric === "poang"
+    ? rows.reduce((sum, h) => sum + h.points, 0)
+    : rows.length;
+}
+
+export function challengeMedal(
+  c: Challenge,
+  child: Child,
+): { value: number; medal: MedalLevel | null; next: number | null } {
+  const value = challengeValue(c, child);
+  const medal: MedalLevel | null =
+    value >= c.gold
+      ? "guld"
+      : value >= c.silver
+        ? "silver"
+        : value >= c.bronze
+          ? "brons"
+          : null;
+  const next =
+    value < c.bronze
+      ? c.bronze
+      : value < c.silver
+        ? c.silver
+        : value < c.gold
+          ? c.gold
+          : null;
+  return { value, medal, next };
+}
+
+export function challengesForChild(s: FamilyState, childId: string) {
+  return s.challenges.filter(
+    (c) => c.childId === "all" || c.childId === childId,
+  );
+}
+
+// ---------- Huset ----------
+export function currentHouseLevel(s: FamilyState): number {
+  return houseLevelFor(s.lifetimeStars);
+}
+export function markHouseLevelSeen(level: number) {
+  set((s) => ({ ...s, seenHouseLevel: Math.max(s.seenHouseLevel, level) }));
+}
+
+// ---------- Föräldrakod ----------
+export function setParentPin(pin: string) {
+  set((s) => ({ ...s, parentPin: pin }));
+}
+export function checkParentPin(pin: string): boolean {
+  return state.parentPin === pin;
+}
