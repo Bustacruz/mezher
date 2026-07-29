@@ -16,6 +16,7 @@ import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
 import type { Child, RoutineSlot, Task } from "@/lib/family-types";
 import { fireConfetti } from "@/lib/confetti";
 import { ChildAvatar } from "@/components/child-avatar";
+import { HouseScene } from "@/components/house-scene";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -70,6 +71,8 @@ function Index() {
         </div>
       </section>
 
+      <HouseScene compact />
+
       {primaryGoal && <FamilyGoalCard goal={primaryGoal} />}
 
       <section className="space-y-4">
@@ -83,7 +86,7 @@ function Index() {
               className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="text-3xl">{g.emoji}</div>
+                <div className="text-6xl leading-none">{g.emoji}</div>
                 <span className="text-xs font-bold text-accent">
                   {g.progress}/{g.target}
                 </span>
@@ -124,9 +127,9 @@ function ChildColumn({ child }: { child: Child }) {
         className="flex items-center gap-3 group"
       >
         <div className="relative shrink-0">
-          <ChildAvatar child={child} size={88} className="ring-white/70" />
+          <ChildAvatar child={child} size={112} className="ring-white/70" />
           {streak > 0 && (
-            <div className="absolute -bottom-1 -right-1 bg-white ring-1 ring-black/5 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+            <div className="absolute -bottom-1 -right-1 bg-white ring-1 ring-black/5 px-2 py-1 rounded-full text-sm font-bold">
               🔥 {streak}
             </div>
           )}
@@ -192,21 +195,21 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
   };
 
   const base =
-    "w-full flex items-center gap-3 rounded-2xl p-3 pr-3 text-left transition-transform active:scale-[0.98]";
+    "w-full flex items-center gap-3 rounded-3xl p-3 text-left transition-transform active:scale-[0.98]";
 
   if (done) {
     return (
       <div className={`${base} bg-white/60 opacity-60`}>
-        <div className="size-14 rounded-2xl bg-white grid place-items-center text-3xl">
+        <div className="size-24 rounded-3xl bg-white grid place-items-center text-6xl leading-none shrink-0">
           {task.emoji}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-base font-semibold line-through text-zinc-500 truncate">
+          <p className="text-sm font-semibold line-through text-zinc-500 truncate">
             {task.title}
           </p>
-          <p className="text-[11px] text-zinc-400">+{task.points} ⭐</p>
+          <p className="text-xs text-zinc-400">+{task.points} ⭐</p>
         </div>
-        <span className="text-green-600 text-2xl">✅</span>
+        <span className="text-4xl">✅</span>
       </div>
     );
   }
@@ -214,14 +217,14 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
   if (pending) {
     return (
       <div className={`${base} bg-amber-50 ring-1 ring-amber-200`}>
-        <div className="size-14 rounded-2xl bg-white grid place-items-center text-3xl">
+        <div className="size-24 rounded-3xl bg-white grid place-items-center text-6xl leading-none shrink-0">
           {task.emoji}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-base font-semibold truncate">{task.title}</p>
-          <p className="text-[11px] text-amber-700">Väntar på förälder</p>
+          <p className="text-sm font-semibold truncate">{task.title}</p>
+          <p className="text-xs text-amber-700">Väntar på förälder</p>
         </div>
-        <span className="text-amber-600 text-2xl">⏳</span>
+        <span className="text-4xl">⏳</span>
       </div>
     );
   }
@@ -231,15 +234,15 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
       onClick={handle}
       className={`${base} bg-white hover:bg-white ring-1 ring-black/5 shadow-sm ${justDone ? "animate-pop-in" : ""}`}
     >
-      <div className="size-14 rounded-2xl bg-white ring-1 ring-black/5 grid place-items-center text-3xl">
+      <div className="size-24 rounded-3xl bg-white ring-1 ring-black/5 grid place-items-center text-6xl leading-none shrink-0">
         {task.emoji}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-base font-semibold truncate">{task.title}</p>
-        <p className={`text-[11px] font-bold ${c.text}`}>+{task.points} ⭐</p>
+        <p className="text-sm font-semibold truncate">{task.title}</p>
+        <p className={`text-xs font-bold ${c.text}`}>+{task.points} ⭐</p>
       </div>
       <span
-        className={`${c.bg} text-white text-lg font-bold rounded-full size-11 grid place-items-center shrink-0 shadow`}
+        className={`${c.bg} text-white text-2xl font-bold rounded-full size-14 grid place-items-center shrink-0 shadow`}
       >
         ✓
       </span>

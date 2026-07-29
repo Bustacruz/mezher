@@ -41,7 +41,7 @@ export function TaskCard({ task, child }: { task: Task; child: Child }) {
     return (
       <div className="bg-zinc-50 ring-1 ring-black/5 p-6 rounded-[28px] flex flex-col gap-6 opacity-70">
         <div className="flex justify-between items-start">
-          <div className="size-16 bg-white rounded-2xl ring-1 ring-black/5 grid place-items-center text-4xl">
+          <div className="size-28 bg-white rounded-3xl ring-1 ring-black/5 grid place-items-center text-7xl leading-none">
             {task.emoji}
           </div>
           <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
@@ -49,10 +49,10 @@ export function TaskCard({ task, child }: { task: Task; child: Child }) {
           </div>
         </div>
         <div className="space-y-1">
-          <h4 className="text-xl font-semibold font-display line-through text-zinc-500">
+          <h4 className="text-base font-semibold font-display line-through text-zinc-500">
             {task.title}
           </h4>
-          <p className="text-sm text-zinc-400">+{task.points} ⭐ intjänat</p>
+          <p className="text-xs text-zinc-400">+{task.points} ⭐ intjänat</p>
         </div>
       </div>
     );
@@ -62,7 +62,7 @@ export function TaskCard({ task, child }: { task: Task; child: Child }) {
     return (
       <div className="bg-amber-50 ring-1 ring-amber-200 p-6 rounded-[28px] flex flex-col gap-6">
         <div className="flex justify-between items-start">
-          <div className="size-16 bg-white rounded-2xl ring-1 ring-black/5 grid place-items-center text-4xl">
+          <div className="size-28 bg-white rounded-3xl ring-1 ring-black/5 grid place-items-center text-7xl leading-none">
             {task.emoji}
           </div>
           <div className="bg-amber-200 text-amber-800 px-3 py-1 rounded-full text-xs font-bold">
@@ -70,8 +70,8 @@ export function TaskCard({ task, child }: { task: Task; child: Child }) {
           </div>
         </div>
         <div className="space-y-1">
-          <h4 className="text-xl font-semibold font-display">{task.title}</h4>
-          <p className="text-sm text-amber-700">Väntar på förälder</p>
+          <h4 className="text-base font-semibold font-display">{task.title}</h4>
+          <p className="text-xs text-amber-700">Väntar på förälder</p>
         </div>
       </div>
     );
@@ -83,15 +83,15 @@ export function TaskCard({ task, child }: { task: Task; child: Child }) {
       className={`text-left bg-card-soft ring-1 ring-black/5 p-6 rounded-[28px] flex flex-col gap-6 transition-transform hover:scale-[1.02] active:scale-[0.98] ${justDone ? "animate-pop-in" : ""}`}
     >
       <div className="flex justify-between items-start">
-        <div className="size-16 bg-white rounded-2xl ring-1 ring-black/5 grid place-items-center text-4xl shadow-sm">
+        <div className="size-28 bg-white rounded-3xl ring-1 ring-black/5 grid place-items-center text-7xl leading-none shadow-sm">
           {task.emoji}
         </div>
-        <div className={`${c.soft} ${c.text} px-3 py-1 rounded-full text-xs font-bold`}>
+        <div className={`${c.soft} ${c.text} px-3 py-1.5 rounded-full text-sm font-bold`}>
           +{task.points} ⭐
         </div>
       </div>
       <div className="space-y-1">
-        <h4 className="text-xl font-semibold font-display">{task.title}</h4>
+        <h4 className="text-base font-semibold font-display">{task.title}</h4>
         {task.requiresApproval && (
           <p className="text-xs text-zinc-500">Kräver godkännande</p>
         )}
