@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MalRouteImport } from './routes/mal'
+import { Route as HusetRouteImport } from './routes/huset'
 import { Route as ForalderRouteImport } from './routes/foralder'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BarnIdRouteImport } from './routes/barn.$id'
@@ -17,6 +18,11 @@ import { Route as BarnIdRouteImport } from './routes/barn.$id'
 const MalRoute = MalRouteImport.update({
   id: '/mal',
   path: '/mal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HusetRoute = HusetRouteImport.update({
+  id: '/huset',
+  path: '/huset',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForalderRoute = ForalderRouteImport.update({
@@ -38,12 +44,14 @@ const BarnIdRoute = BarnIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/foralder': typeof ForalderRoute
+  '/huset': typeof HusetRoute
   '/mal': typeof MalRoute
   '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/foralder': typeof ForalderRoute
+  '/huset': typeof HusetRoute
   '/mal': typeof MalRoute
   '/barn/$id': typeof BarnIdRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/foralder': typeof ForalderRoute
+  '/huset': typeof HusetRoute
   '/mal': typeof MalRoute
   '/barn/$id': typeof BarnIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/foralder' | '/mal' | '/barn/$id'
+  fullPaths: '/' | '/foralder' | '/huset' | '/mal' | '/barn/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/foralder' | '/mal' | '/barn/$id'
-  id: '__root__' | '/' | '/foralder' | '/mal' | '/barn/$id'
+  to: '/' | '/foralder' | '/huset' | '/mal' | '/barn/$id'
+  id: '__root__' | '/' | '/foralder' | '/huset' | '/mal' | '/barn/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ForalderRoute: typeof ForalderRoute
+  HusetRoute: typeof HusetRoute
   MalRoute: typeof MalRoute
   BarnIdRoute: typeof BarnIdRoute
 }
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/mal'
       fullPath: '/mal'
       preLoaderRoute: typeof MalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/huset': {
+      id: '/huset'
+      path: '/huset'
+      fullPath: '/huset'
+      preLoaderRoute: typeof HusetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/foralder': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ForalderRoute: ForalderRoute,
+  HusetRoute: HusetRoute,
   MalRoute: MalRoute,
   BarnIdRoute: BarnIdRoute,
 }
