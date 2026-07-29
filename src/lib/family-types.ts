@@ -50,13 +50,56 @@ export interface FamilyGoal {
   progress: number;
 }
 
+export type ChallengeMetric = "uppgifter" | "poang" | "streak";
+export type ChallengePeriod = "vecka" | "manad" | "total";
+export type MedalLevel = "brons" | "silver" | "guld";
+
+export interface Challenge {
+  id: string;
+  title: string;
+  emoji: string;
+  childId: string | "all";
+  metric: ChallengeMetric;
+  period: ChallengePeriod;
+  bronze: number;
+  silver: number;
+  gold: number;
+}
+
 export interface FamilyState {
   children: Child[];
   tasks: Task[];
   rewards: Reward[];
   goals: FamilyGoal[];
   familyPoints: number;
+  challenges: Challenge[];
+  /** Totalt antal stjärnor familjen någonsin tjänat – driver husets nivå. */
+  lifetimeStars: number;
+  /** Högsta hus-nivå som barnen har sett firandet för. */
+  seenHouseLevel: number;
+  parentPin: string;
 }
+
+export const MEDAL_STYLE: Record<
+  MedalLevel,
+  { label: string; emoji: string; ring: string; bg: string }
+> = {
+  brons: { label: "Brons", emoji: "🥉", ring: "ring-amber-700/30", bg: "bg-amber-50" },
+  silver: { label: "Silver", emoji: "🥈", ring: "ring-zinc-400/40", bg: "bg-zinc-50" },
+  guld: { label: "Guld", emoji: "🥇", ring: "ring-amber-400/50", bg: "bg-amber-100" },
+};
+
+export const METRIC_LABEL: Record<ChallengeMetric, string> = {
+  uppgifter: "Avklarade uppgifter",
+  poang: "Intjänade stjärnor",
+  streak: "Bästa streak",
+};
+
+export const PERIOD_LABEL: Record<ChallengePeriod, string> = {
+  vecka: "Denna vecka",
+  manad: "Denna månad",
+  total: "Totalt",
+};
 
 export const COLOR_MAP: Record<
   KidColor,
