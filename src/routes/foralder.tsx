@@ -203,6 +203,17 @@ function BarnTab({ state }: { state: ReturnType<typeof useFamily> }) {
 
   return (
     <div className="space-y-8">
+      <Section title="Familjens namn">
+        <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 flex items-center gap-3">
+          <span className="text-5xl leading-none">🏡</span>
+          <input
+            value={state.familyName}
+            onChange={(e) => setFamilyName(e.target.value)}
+            placeholder="Vår Familj"
+            className={`${input} font-semibold text-lg`}
+          />
+        </div>
+      </Section>
       <Section title="Barnprofiler">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {state.children.map((c) => (
