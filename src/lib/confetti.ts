@@ -14,3 +14,38 @@ export function fireConfetti() {
   }
   setTimeout(() => container.remove(), 3000);
 }
+
+/** Stor konfettiregn – används vid dagens alla uppgifter klara. */
+export function fireBigConfetti() {
+  fireConfetti();
+  setTimeout(fireConfetti, 250);
+  setTimeout(fireConfetti, 600);
+  setTimeout(fireConfetti, 1100);
+}
+
+/** Stjärnor och ringar som spretar ut från ett element. */
+export function fireStarBurst(target: Element | null) {
+  if (typeof document === "undefined" || !target) return;
+  const r = target.getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
+  const container = document.createElement("div");
+  container.style.cssText =
+    "position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden;";
+  document.body.appendChild(container);
+
+  const ring = document.createElement("div");
+  ring.style.cssText = `position:absolute;left:${cx - 40}px;top:${cy - 40}px;width:80px;height:80px;border-radius:9999px;border:4px solid #f59e0b;animation:ring-burst 0.7s ease-out forwards;`;
+  container.appendChild(ring);
+
+  const icons = ["⭐", "✨", "🌟", "💫", "🎉"];
+  for (let i = 0; i < 14; i++) {
+    const a = (Math.PI * 2 * i) / 14 + Math.random() * 0.4;
+    const dist = 90 + Math.random() * 90;
+    const el = document.createElement("div");
+    el.textContent = icons[i % icons.length];
+    el.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;font-size:${18 + Math.random() * 18}px;--dx:${Math.cos(a) * dist}px;--dy:${Math.sin(a) * dist}px;animation:star-fly ${0.7 + Math.random() * 0.4}s cubic-bezier(0.2,0.7,0.3,1) forwards;`;
+    container.appendChild(el);
+  }
+  setTimeout(() => container.remove(), 1600);
+}
