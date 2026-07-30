@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Child, Task } from "@/lib/family-types";
 import { COLOR_MAP } from "@/lib/family-types";
-import { completeTask, isTaskDoneToday, isTaskPending } from "@/lib/family-store";
-import { fireConfetti } from "@/lib/confetti";
+import {
+  completeTask,
+  getFamily,
+  isTaskDoneToday,
+  isTaskPending,
+  progressToday,
+} from "@/lib/family-store";
+import { celebrateDay, celebrateTask } from "@/lib/celebrate";
 
 export function TaskCard({ task, child }: { task: Task; child: Child }) {
   const [justDone, setJustDone] = useState(false);
+  const ref = useRef<HTMLButtonElement>(null);
   const done = isTaskDoneToday(task, child.id);
   const pending = isTaskPending(task, child.id);
   const c = COLOR_MAP[child.color];
@@ -15,24 +22,18 @@ export function TaskCard({ task, child }: { task: Task; child: Child }) {
     completeTask(task.id, child.id);
     if (!task.requiresApproval) {
       setJustDone(true);
-      fireConfetti();
-      try {
-        const AC =
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext })
-            .webkitAudioContext;
-        const ctx = new AC();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.frequency.value = 880;
-        g.gain.value = 0.05;
-        o.connect(g).connect(ctx.destination);
-        o.start();
-        o.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.15);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-        o.stop(ctx.currentTime + 0.26);
-      } catch {
-        // ignore
+      celebrateTask(ref.current);
+      const { done: d, total } = progressToday(getFamily(), child.id);
+      if (total > 0 && d === total) {
+        setTimeout(
+          () =>
+            celebrateDay({
+              childName: child.name,
+              childEmoji: child.emoji,
+              total,
+            }),
+          600,
+        );
       }
     }
   };
@@ -79,8 +80,9 @@ export function TaskCard({ task, child }: { task: Task; child: Child }) {
 
   return (
     <button
+      ref={ref}
       onClick={handle}
-      className={`text-left bg-card-soft ring-1 ring-black/5 p-6 rounded-[28px] flex flex-col gap-6 transition-transform hover:scale-[1.02] active:scale-[0.98] ${justDone ? "animate-pop-in" : ""}`}
+      className={`text-left bg-card-soft ring-1 ring-black/5 p-6 rounded-[28px] flex flex-col gap-6 transition-transform hover:scale-[1.02] active:scale-[0.98] ${justDone ? "animate-task-pop" : ""}`}
     >
       <div className="flex justify-between items-start">
         <div className="size-28 bg-white rounded-3xl ring-1 ring-black/5 grid place-items-center text-7xl leading-none shadow-sm">

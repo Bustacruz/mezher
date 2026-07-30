@@ -1,41 +1,41 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { ChallengeCard } from "@/components/challenge-card";
+import { SuperpowerCard } from "@/components/superpower-card";
 import { ChildAvatar } from "@/components/child-avatar";
 import { challengesForChild, useFamily } from "@/lib/family-store";
 import { COLOR_MAP } from "@/lib/family-types";
 
-export const Route = createFileRoute("/utmaningar")({
+export const Route = createFileRoute("/superkrafter")({
   head: () => ({
     meta: [
-      { title: "Utmaningar – Vår Familj" },
+      { title: "Superkrafter – Vår Familj" },
       {
         name: "description",
         content:
-          "Utmaningar med brons-, silver- och guldmedaljer för varje barn i familjen.",
+          "Barnens superkrafter: modig, snäll, hjälpsam och mer. Samla brons, silver och guld för karaktär som växer.",
       },
-      { property: "og:title", content: "Utmaningar – Vår Familj" },
+      { property: "og:title", content: "Superkrafter – Vår Familj" },
       {
         property: "og:description",
-        content: "Samla brons, silver och guld på familjens utmaningar.",
+        content: "Samla superkrafter som bygger karaktär – brons, silver och guld.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: UtmaningarPage,
+  component: SuperkrafterPage,
 });
 
-function UtmaningarPage() {
+function SuperkrafterPage() {
   const state = useFamily();
   return (
     <AppShell>
       <div className="px-1 space-y-1">
         <p className="text-xs font-bold uppercase tracking-widest text-accent">
-          🏅 Utmaningar
+          🦸 Superkrafter
         </p>
         <h2 className="text-2xl md:text-3xl font-semibold font-display">
-          Samla medaljer
+          Krafter som bygger karaktär
         </h2>
       </div>
       {state.children.map((child) => {
@@ -51,12 +51,12 @@ function UtmaningarPage() {
             </div>
             {list.length === 0 ? (
               <p className="text-sm text-zinc-500 px-1">
-                Inga utmaningar än – skapa dem i Föräldraläget.
+                Inga superkrafter än – skapa dem i Föräldraläget.
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {list.map((ch) => (
-                  <ChallengeCard key={ch.id} challenge={ch} child={child} />
+                  <SuperpowerCard key={ch.id} challenge={ch} child={child} />
                 ))}
               </div>
             )}

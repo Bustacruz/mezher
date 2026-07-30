@@ -2,7 +2,7 @@ import { challengeMedal } from "@/lib/family-store";
 import type { Challenge, Child } from "@/lib/family-types";
 import { MEDAL_STYLE, PERIOD_LABEL } from "@/lib/family-types";
 
-export function ChallengeCard({
+export function SuperpowerCard({
   challenge,
   child,
 }: {
@@ -21,13 +21,16 @@ export function ChallengeCard({
       }`}
     >
       <div className="flex items-center gap-4">
-        <span className="text-6xl leading-none">{challenge.emoji}</span>
+        <span className="text-7xl leading-none">{challenge.emoji}</span>
         <span className="text-6xl leading-none ml-auto">
           {style ? style.emoji : "⚪"}
         </span>
       </div>
-      <div>
-        <p className="font-semibold font-display text-lg">{challenge.title}</p>
+      <div className="space-y-1">
+        <p className="font-semibold font-display text-xl">{challenge.title}</p>
+        {challenge.description && (
+          <p className="text-sm text-zinc-600">{challenge.description}</p>
+        )}
         <p className="text-xs text-zinc-500 font-medium">
           {PERIOD_LABEL[challenge.period]} · {value} av {target}
         </p>
@@ -38,7 +41,7 @@ export function ChallengeCard({
           style={{ width: `${Math.max(3, pct)}%` }}
         />
       </div>
-      <div className="flex gap-2 text-xs font-bold">
+      <div className="flex gap-2 text-sm font-bold">
         <span className={value >= challenge.bronze ? "" : "opacity-40"}>
           🥉 {challenge.bronze}
         </span>

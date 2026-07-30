@@ -1,6 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { HouseUnlockCelebration } from "@/components/house-scene";
+import { DayCompleteCelebration } from "@/components/day-complete-celebration";
+import { useFamily } from "@/lib/family-store";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -11,11 +13,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
       <BottomNav />
       <HouseUnlockCelebration />
+      <DayCompleteCelebration />
     </div>
   );
 }
 
 function AppHeader() {
+  const familyName = useFamily().familyName;
   return (
     <header className="py-4 md:py-6 px-4 md:px-8 lg:px-12 border-b border-zinc-950/5 bg-surface/80 backdrop-blur-md sticky top-0 z-30">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -24,14 +28,14 @@ function AppHeader() {
             🏠
           </div>
           <h1 className="text-xl md:text-2xl font-semibold font-display tracking-tight truncate">
-            Vår Familj
+            {familyName}
           </h1>
         </Link>
         <nav className="hidden md:flex items-center gap-1 ml-auto mr-2">
           {[
             { to: "/", icon: "🏠", label: "Hem" },
             { to: "/huset", icon: "🏰", label: "Huset" },
-            { to: "/utmaningar", icon: "🏅", label: "Utmaningar" },
+            { to: "/superkrafter", icon: "🦸", label: "Superkrafter" },
             { to: "/mal", icon: "🏆", label: "Mål" },
           ].map((it) => (
             <Link
@@ -63,7 +67,7 @@ function BottomNav() {
   const items: { to: string; icon: string; label: string; match: (p: string) => boolean }[] = [
     { to: "/", icon: "🏠", label: "Hem", match: (p) => p === "/" },
     { to: "/huset", icon: "🏰", label: "Huset", match: (p) => p.startsWith("/huset") },
-    { to: "/utmaningar", icon: "🏅", label: "Medaljer", match: (p) => p.startsWith("/utmaningar") },
+    { to: "/superkrafter", icon: "🦸", label: "Krafter", match: (p) => p.startsWith("/superkrafter") },
     { to: "/mal", icon: "🏆", label: "Mål", match: (p) => p.startsWith("/mal") },
     { to: "/foralder", icon: "⚙️", label: "Föräldrar", match: (p) => p.startsWith("/foralder") },
   ];
