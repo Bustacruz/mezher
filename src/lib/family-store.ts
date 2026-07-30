@@ -233,6 +233,10 @@ export function resetFamily() {
   set(() => defaultState());
 }
 
+export function getFamily(): FamilyState {
+  return state;
+}
+
 // ---------- Children ----------
 export function addChild(input: { name: string; emoji: string; color: Child["color"] }) {
   set((s) => ({
