@@ -50,7 +50,7 @@ export interface FamilyGoal {
   progress: number;
 }
 
-export type ChallengeMetric = "uppgifter" | "poang" | "streak";
+export type ChallengeMetric = "uppgifter" | "poang" | "streak" | "karaktar";
 export type ChallengePeriod = "vecka" | "manad" | "total";
 export type MedalLevel = "brons" | "silver" | "guld";
 
@@ -64,9 +64,14 @@ export interface Challenge {
   bronze: number;
   silver: number;
   gold: number;
+  /** Beskrivning av superkraften, t.ex. "Du vågade prova något nytt". */
+  description?: string;
+  /** Manuellt tilldelade superkrafter (metric = "karaktar"). */
+  awards?: { date: string; childId: string }[];
 }
 
 export interface FamilyState {
+  familyName: string;
   children: Child[];
   tasks: Task[];
   rewards: Reward[];
@@ -93,6 +98,7 @@ export const METRIC_LABEL: Record<ChallengeMetric, string> = {
   uppgifter: "Avklarade uppgifter",
   poang: "Intjänade stjärnor",
   streak: "Bästa streak",
+  karaktar: "Ges av förälder",
 };
 
 export const PERIOD_LABEL: Record<ChallengePeriod, string> = {
