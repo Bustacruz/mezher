@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { FamilyGoalCard } from "@/components/family-goal-card";
 import {
   bestStreak,
   completeTask,
+  getFamily,
   isTaskDoneToday,
   isTaskPending,
   progressToday,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/family-store";
 import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
 import type { Child, RoutineSlot, Task } from "@/lib/family-types";
-import { fireConfetti } from "@/lib/confetti";
+import { celebrateDay, celebrateTask } from "@/lib/celebrate";
 import { ChildAvatar } from "@/components/child-avatar";
 import { HouseScene } from "@/components/house-scene";
 
@@ -181,6 +182,7 @@ function ChildColumn({ child }: { child: Child }) {
 
 function MiniTask({ task, child }: { task: Task; child: Child }) {
   const [justDone, setJustDone] = useState(false);
+  const ref = useRef<HTMLButtonElement>(null);
   const done = isTaskDoneToday(task, child.id);
   const pending = isTaskPending(task, child.id);
   const c = COLOR_MAP[child.color];
@@ -190,7 +192,19 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
     completeTask(task.id, child.id);
     if (!task.requiresApproval) {
       setJustDone(true);
-      fireConfetti();
+      celebrateTask(ref.current);
+      const { done: d, total } = progressToday(getFamily(), child.id);
+      if (total > 0 && d === total) {
+        setTimeout(
+          () =>
+            celebrateDay({
+              childName: child.name,
+              childEmoji: child.emoji,
+              total,
+            }),
+          600,
+        );
+      }
     }
   };
 
@@ -231,8 +245,9 @@ function MiniTask({ task, child }: { task: Task; child: Child }) {
 
   return (
     <button
+      ref={ref}
       onClick={handle}
-      className={`${base} bg-white hover:bg-white ring-1 ring-black/5 shadow-sm ${justDone ? "animate-pop-in" : ""}`}
+      className={`${base} bg-white hover:bg-white ring-1 ring-black/5 shadow-sm ${justDone ? "animate-task-pop" : ""}`}
     >
       <div className="size-24 rounded-3xl bg-white ring-1 ring-black/5 grid place-items-center text-6xl leading-none shrink-0">
         {task.emoji}
