@@ -979,21 +979,79 @@ function AngraTab({ state }: { state: ReturnType<typeof useFamily> }) {
   );
 }
 
-function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
+function SuperkrafterTab({ state }: { state: ReturnType<typeof useFamily> }) {
   const [draft, setDraft] = useState<Omit<Challenge, "id">>({
     title: "",
-    emoji: "🏅",
+    emoji: "🦸",
+    description: "",
     childId: "all",
-    metric: "uppgifter",
-    period: "vecka",
-    bronze: 5,
-    silver: 15,
-    gold: 30,
+    metric: "karaktar",
+    period: "manad",
+    bronze: 1,
+    silver: 3,
+    gold: 6,
+    awards: [],
   });
 
   return (
     <div className="space-y-8">
-      <Section title="Alla utmaningar">
+      <Section title="Ge en superkraft">
+        <div className="space-y-3">
+          {state.challenges.filter((c) => c.metric === "karaktar").length === 0 && (
+            <p className="text-sm text-zinc-500">
+              Skapa en superkraft med “Ges av förälder” nedan.
+            </p>
+          )}
+          {state.challenges
+            .filter((c) => c.metric === "karaktar")
+            .map((ch) => (
+              <div
+                key={ch.id}
+                className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex flex-wrap items-center gap-3"
+              >
+                <span className="text-5xl leading-none">{ch.emoji}</span>
+                <div className="min-w-[8rem] flex-1">
+                  <p className="font-semibold font-display">{ch.title}</p>
+                  {ch.description && (
+                    <p className="text-xs text-zinc-500">{ch.description}</p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {state.children
+                    .filter((c) => ch.childId === "all" || ch.childId === c.id)
+                    .map((c) => {
+                      const count = (ch.awards ?? []).filter(
+                        (a) => a.childId === c.id,
+                      ).length;
+                      return (
+                        <div key={c.id} className="flex items-center gap-1">
+                          <button
+                            onClick={() => awardSuperpower(ch.id, c.id)}
+                            className="px-3 py-2 rounded-xl bg-brand text-white font-semibold text-sm"
+                          >
+                            + {c.name}
+                          </button>
+                          <span className="text-xs font-bold text-zinc-500 w-6 text-center">
+                            {count}
+                          </span>
+                          {count > 0 && (
+                            <button
+                              onClick={() => removeSuperpowerAward(ch.id, c.id)}
+                              className="px-2 py-2 rounded-xl bg-zinc-100 text-zinc-500 text-sm"
+                            >
+                              −
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            ))}
+        </div>
+      </Section>
+
+      <Section title="Alla superkrafter">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {state.challenges.map((ch) => (
             <div
@@ -1017,6 +1075,14 @@ function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
                   className={`${input} font-semibold`}
                 />
               </div>
+              <input
+                value={ch.description ?? ""}
+                placeholder="Beskrivning, t.ex. Du vågade prova nytt"
+                onChange={(e) =>
+                  updateChallenge(ch.id, { description: e.target.value })
+                }
+                className={input}
+              />
               <div className="grid grid-cols-2 gap-2">
                 <select
                   value={ch.metric}
@@ -1027,7 +1093,7 @@ function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
                   }
                   className={input}
                 >
-                  {(["uppgifter", "poang", "streak"] as ChallengeMetric[]).map(
+                  {(["karaktar", "uppgifter", "poang", "streak"] as ChallengeMetric[]).map(
                     (m) => (
                       <option key={m} value={m}>
                         {METRIC_LABEL[m]}
@@ -1089,21 +1155,21 @@ function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
                 onClick={() => removeChallenge(ch.id)}
                 className="text-xs text-zinc-400 hover:text-red-500"
               >
-                Ta bort utmaning
+                Ta bort superkraft
               </button>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section title="Skapa ny utmaning">
+      <Section title="Skapa ny superkraft">
         <div className="bg-white ring-1 ring-black/5 rounded-[24px] p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Field label="Titel">
             <input
               value={draft.title}
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
               className={input}
-              placeholder="T.ex. Läsmästaren"
+              placeholder="T.ex. Modig"
             />
           </Field>
           <Field label="Emoji">
@@ -1136,7 +1202,7 @@ function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
               }
               className={input}
             >
-              {(["uppgifter", "poang", "streak"] as ChallengeMetric[]).map((m) => (
+              {(["karaktar", "uppgifter", "poang", "streak"] as ChallengeMetric[]).map((m) => (
                 <option key={m} value={m}>
                   {METRIC_LABEL[m]}
                 </option>
@@ -1158,7 +1224,14 @@ function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
               ))}
             </select>
           </Field>
-          <div />
+          <Field label="Beskrivning">
+            <input
+              value={draft.description ?? ""}
+              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              className={input}
+              placeholder="Du vågade prova något nytt"
+            />
+          </Field>
           <Field label="🥉 Brons">
             <input
               type="number"
@@ -1198,7 +1271,7 @@ function UtmaningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
               }}
               className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5"
             >
-              + Lägg till utmaning
+              + Lägg till superkraft
             </button>
           </div>
         </div>
