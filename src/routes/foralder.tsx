@@ -8,6 +8,7 @@ import {
   addReward,
   addTask,
   approvePending,
+  awardSuperpower,
   checkParentPin,
   completedToday,
   contributeToGoal,
@@ -16,8 +17,10 @@ import {
   removeChild,
   removeGoal,
   removeReward,
+  removeSuperpowerAward,
   removeTask,
   resetFamily,
+  setFamilyName,
   setParentPin,
   uncompleteTask,
   updateChallenge,
@@ -63,7 +66,7 @@ function ForalderPage() {
     | "beloningar"
     | "godkann"
     | "angra"
-    | "utmaningar"
+    | "superkrafter"
     | "mal"
     | "statistik"
     | "kod"
@@ -100,7 +103,7 @@ function ForalderPage() {
             ["beloningar", "🎁 Belöningar"],
             ["godkann", `✅ Godkänn${pending.length ? ` (${pending.length})` : ""}`],
             ["angra", "↩️ Ångra avbockning"],
-            ["utmaningar", "🏅 Utmaningar"],
+            ["superkrafter", "🦸 Superkrafter"],
             ["mal", "🏆 Familjemål"],
             ["statistik", "📊 Statistik"],
             ["kod", "🔒 Kod"],
@@ -138,7 +141,7 @@ function ForalderPage() {
       )}
       {tab === "mal" && <MalTab state={state} />}
       {tab === "angra" && <AngraTab state={state} />}
-      {tab === "utmaningar" && <UtmaningarTab state={state} />}
+      {tab === "superkrafter" && <SuperkrafterTab state={state} />}
       {tab === "kod" && <KodTab />}
       {tab === "statistik" && <StatistikTab state={state} />}
 
