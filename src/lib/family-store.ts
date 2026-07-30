@@ -572,7 +572,12 @@ export function progressToday(
   return { done, total: list.length };
 }
 
-// ---------- Utmaningar ----------
+// ---------- Familj ----------
+export function setFamilyName(name: string) {
+  set((s) => ({ ...s, familyName: name }));
+}
+
+// ---------- Superkrafter ----------
 export function addChallenge(c: Omit<Challenge, "id">) {
   set((s) => ({ ...s, challenges: [...s.challenges, { ...c, id: uid() }] }));
 }
@@ -588,6 +593,36 @@ export function removeChallenge(id: string) {
   set((s) => ({ ...s, challenges: s.challenges.filter((c) => c.id !== id) }));
 }
 
+/** Förälder ger ett barn en superkraft (metric = "karaktar"). */
+export function awardSuperpower(challengeId: string, childId: string) {
+  set((s) => ({
+    ...s,
+    challenges: s.challenges.map((c) =>
+      c.id === challengeId
+        ? { ...c, awards: [...(c.awards ?? []), { date: today(), childId }] }
+        : c,
+    ),
+  }));
+}
+
+/** Ta bort senaste tilldelade superkraften för ett barn. */
+export function removeSuperpowerAward(challengeId: string, childId: string) {
+  set((s) => ({
+    ...s,
+    challenges: s.challenges.map((c) => {
+      if (c.id !== challengeId) return c;
+      const list = [...(c.awards ?? [])];
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i].childId === childId) {
+          list.splice(i, 1);
+          break;
+        }
+      }
+      return { ...c, awards: list };
+    }),
+  }));
+}
+
 function periodStart(period: Challenge["period"]): string {
   if (period === "total") return "0000-00-00";
   const now = new Date();
@@ -599,6 +634,11 @@ function periodStart(period: Challenge["period"]): string {
 export function challengeValue(c: Challenge, child: Child): number {
   if (c.metric === "streak") return bestStreak(child);
   const from = periodStart(c.period);
+  if (c.metric === "karaktar") {
+    return (c.awards ?? []).filter(
+      (a) => a.childId === child.id && a.date >= from,
+    ).length;
+  }
   const rows = child.history.filter((h) => h.date >= from);
   return c.metric === "poang"
     ? rows.reduce((sum, h) => sum + h.points, 0)
