@@ -27,7 +27,7 @@ const UNLOCKS: { emoji: string; name: string }[] = [
   { emoji: "🌲", name: "Granskog" },
   { emoji: "🦋", name: "Fjärilar" },
   { emoji: "🐰", name: "En kanin" },
-  { emoji: "🎠", name: "Lekplats" },
+  { emoji: "🎪", name: "Lekplats" },
   { emoji: "🦆", name: "Damm med ankor" },
   { emoji: "🌻", name: "Solrosor" },
   { emoji: "🐴", name: "En häst" },
