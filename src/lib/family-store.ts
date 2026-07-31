@@ -8,7 +8,7 @@ import type {
   Reward,
   Task,
 } from "./family-types";
-import { houseLevelFor } from "./house";
+import { HOUSE_LEVELS, houseLevelFor } from "./house";
 
 const STORAGE_KEY = "var-familj-v1";
 
@@ -712,6 +712,21 @@ export function currentHouseLevel(s: FamilyState): number {
 }
 export function markHouseLevelSeen(level: number) {
   set((s) => ({ ...s, seenHouseLevel: Math.max(s.seenHouseLevel, level) }));
+}
+
+/** Sätt husets nivå manuellt (låser upp/låser nivåer) via stjärntröskeln. */
+export function setHouseLevel(level: number) {
+  const lvl = Math.max(0, Math.min(HOUSE_LEVELS.length, Math.round(level)));
+  const stars = lvl === 0 ? 0 : HOUSE_LEVELS[lvl - 1].threshold;
+  set((s) => ({ ...s, lifetimeStars: stars, seenHouseLevel: lvl }));
+}
+
+/** Lägg till (eller dra av) stjärnor för huset. */
+export function addHouseStars(amount: number) {
+  set((s) => ({
+    ...s,
+    lifetimeStars: Math.max(0, s.lifetimeStars + amount),
+  }));
 }
 
 // ---------- Föräldrakod ----------
