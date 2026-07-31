@@ -194,11 +194,17 @@ function load(): FamilyState {
 function migrate(s: Partial<FamilyState>): FamilyState {
   const base = defaultState();
   const lifetimeStars = s.lifetimeStars ?? s.familyPoints ?? base.lifetimeStars;
+  // Gamla "utmaningar" saknar karaktärs-superkrafter – ersätt dem med standarduppsättningen.
+  const storedChallenges = s.challenges;
+  const challenges =
+    storedChallenges && storedChallenges.some((c) => c.metric === "karaktar")
+      ? storedChallenges
+      : base.challenges;
   return {
     ...base,
     ...s,
     familyName: s.familyName ?? base.familyName,
-    challenges: s.challenges ?? base.challenges,
+    challenges,
     lifetimeStars,
     seenHouseLevel: s.seenHouseLevel ?? houseLevelFor(lifetimeStars),
     parentPin: s.parentPin ?? base.parentPin,
