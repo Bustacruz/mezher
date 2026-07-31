@@ -233,6 +233,33 @@ export function resetFamily() {
   set(() => defaultState());
 }
 
+/** Nollställer endast barnens poäng/progress – behåller namn, bilder, uppgifter m.m. */
+export function resetProgress() {
+  set((s) => ({
+    ...s,
+    children: s.children.map((c) => ({
+      ...c,
+      points: 0,
+      streaks: {},
+      history: [],
+      badges: [],
+    })),
+    tasks: s.tasks.map((t) => ({
+      ...t,
+      completedDates: [],
+      pendingApproval: [],
+    })),
+    challenges: s.challenges.map((c) => ({ ...c, awards: [] })),
+    goals: s.goals.map((g) => ({ ...g, progress: 0 })),
+    familyPoints: 0,
+  }));
+}
+
+/** Nollställer husets progress (stjärnor och nivå). */
+export function resetHouse() {
+  set((s) => ({ ...s, lifetimeStars: 0, seenHouseLevel: 0 }));
+}
+
 export function getFamily(): FamilyState {
   return state;
 }
