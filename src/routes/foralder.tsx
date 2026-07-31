@@ -71,6 +71,7 @@ function ForalderPage() {
     | "angra"
     | "superkrafter"
     | "mal"
+    | "huset"
     | "statistik"
     | "kod"
   >("barn");
@@ -108,6 +109,7 @@ function ForalderPage() {
             ["angra", "↩️ Ångra avbockning"],
             ["superkrafter", "🦸 Superkrafter"],
             ["mal", "🏆 Familjemål"],
+            ["huset", "🏰 Huset"],
             ["statistik", "📊 Statistik"],
             ["kod", "🔒 Kod"],
           ] as const
@@ -145,19 +147,32 @@ function ForalderPage() {
       {tab === "mal" && <MalTab state={state} />}
       {tab === "angra" && <AngraTab state={state} />}
       {tab === "superkrafter" && <SuperkrafterTab state={state} />}
+      {tab === "huset" && <HusetTab state={state} />}
       {tab === "kod" && <KodTab />}
       {tab === "statistik" && <StatistikTab state={state} />}
 
-      <div className="pt-8 border-t border-zinc-950/5">
+      <div className="pt-8 border-t border-zinc-950/5 flex flex-wrap gap-6">
         <button
           onClick={() => {
-            if (confirm("Nollställ all data? Detta kan inte ångras.")) {
-              resetFamily();
+            if (
+              confirm(
+                "Nollställ barnens poäng och progress? Namn, bilder, uppgifter och belöningar behålls.",
+              )
+            ) {
+              resetProgress();
             }
           }}
           className="text-xs text-zinc-400 hover:text-red-500 underline"
         >
-          Nollställ all data
+          Nollställ barnens poäng &amp; progress
+        </button>
+        <button
+          onClick={() => {
+            if (confirm("Nollställ husets progress till nivå 0?")) resetHouse();
+          }}
+          className="text-xs text-zinc-400 hover:text-red-500 underline"
+        >
+          Nollställ husets progress
         </button>
       </div>
     </AppShell>
