@@ -62,14 +62,14 @@ function defaultState(): FamilyState {
   });
 
   const tasks: Task[] = [
-    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🪥", points: 10, slot: "morgon", frequency: "daglig", requiresApproval: false }),
+    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🦷", points: 10, slot: "morgon", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Klä på sig", emoji: "👕", points: 15, slot: "morgon", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Bädda sängen", emoji: "🛏️", points: 10, slot: "morgon", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Packa skolväska", emoji: "🎒", points: 10, slot: "dag", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Städa leksaker", emoji: "🧸", points: 15, slot: "dag", frequency: "daglig", requiresApproval: true }),
     mkTask({ childId: "all", title: "Mata husdjur", emoji: "🐶", points: 10, slot: "dag", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Duscha", emoji: "🛁", points: 15, slot: "kvall", frequency: "daglig", requiresApproval: false }),
-    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🪥", points: 10, slot: "kvall", frequency: "daglig", requiresApproval: false }),
+    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🦷", points: 10, slot: "kvall", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Läsa bok", emoji: "📚", points: 20, slot: "kvall", frequency: "daglig", requiresApproval: false }),
   ];
 
@@ -193,6 +193,14 @@ function load(): FamilyState {
 
 function migrate(s: Partial<FamilyState>): FamilyState {
   const base = defaultState();
+  // Vissa nyare emojis (t.ex. 🪥) saknas i äldre iPadOS och visas som ruta.
+  const EMOJI_FIX: Record<string, string> = {
+    "🪥": "🦷",
+    "🛝": "🎪",
+  };
+  const fixEmoji = (e: string) => EMOJI_FIX[e] ?? e;
+  const tasks = s.tasks?.map((t) => ({ ...t, emoji: fixEmoji(t.emoji) }));
+  const rewards = s.rewards?.map((r) => ({ ...r, emoji: fixEmoji(r.emoji) }));
   const lifetimeStars = s.lifetimeStars ?? s.familyPoints ?? base.lifetimeStars;
   // Gamla "utmaningar" saknar karaktärs-superkrafter – ersätt dem med standarduppsättningen.
   const storedChallenges = s.challenges;
@@ -203,6 +211,8 @@ function migrate(s: Partial<FamilyState>): FamilyState {
   return {
     ...base,
     ...s,
+    ...(tasks ? { tasks } : {}),
+    ...(rewards ? { rewards } : {}),
     familyName: s.familyName ?? base.familyName,
     challenges,
     lifetimeStars,
