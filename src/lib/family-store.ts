@@ -62,14 +62,14 @@ function defaultState(): FamilyState {
   });
 
   const tasks: Task[] = [
-    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🪥", points: 10, slot: "morgon", frequency: "daglig", requiresApproval: false }),
+    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🦷", points: 10, slot: "morgon", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Klä på sig", emoji: "👕", points: 15, slot: "morgon", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Bädda sängen", emoji: "🛏️", points: 10, slot: "morgon", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Packa skolväska", emoji: "🎒", points: 10, slot: "dag", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Städa leksaker", emoji: "🧸", points: 15, slot: "dag", frequency: "daglig", requiresApproval: true }),
     mkTask({ childId: "all", title: "Mata husdjur", emoji: "🐶", points: 10, slot: "dag", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Duscha", emoji: "🛁", points: 15, slot: "kvall", frequency: "daglig", requiresApproval: false }),
-    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🪥", points: 10, slot: "kvall", frequency: "daglig", requiresApproval: false }),
+    mkTask({ childId: "all", title: "Borsta tänder", emoji: "🦷", points: 10, slot: "kvall", frequency: "daglig", requiresApproval: false }),
     mkTask({ childId: "all", title: "Läsa bok", emoji: "📚", points: 20, slot: "kvall", frequency: "daglig", requiresApproval: false }),
   ];
 
