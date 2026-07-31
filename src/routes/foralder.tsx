@@ -7,6 +7,7 @@ import {
   addGoal,
   addReward,
   addTask,
+  addHouseStars,
   approvePending,
   awardSuperpower,
   checkParentPin,
@@ -19,8 +20,10 @@ import {
   removeReward,
   removeSuperpowerAward,
   removeTask,
-  resetFamily,
+  resetHouse,
+  resetProgress,
   setFamilyName,
+  setHouseLevel,
   setParentPin,
   uncompleteTask,
   updateChallenge,
@@ -39,6 +42,7 @@ import type {
 } from "@/lib/family-types";
 import { COLOR_MAP, METRIC_LABEL, PERIOD_LABEL, SLOT_LABEL } from "@/lib/family-types";
 import { ChildAvatar, fileToCompressedDataUrl } from "@/components/child-avatar";
+import { HOUSE_LEVELS, houseLevelFor } from "@/lib/house";
 
 export const Route = createFileRoute("/foralder")({
   head: () => ({
@@ -68,6 +72,7 @@ function ForalderPage() {
     | "angra"
     | "superkrafter"
     | "mal"
+    | "huset"
     | "statistik"
     | "kod"
   >("barn");
@@ -105,6 +110,7 @@ function ForalderPage() {
             ["angra", "↩️ Ångra avbockning"],
             ["superkrafter", "🦸 Superkrafter"],
             ["mal", "🏆 Familjemål"],
+            ["huset", "🏰 Huset"],
             ["statistik", "📊 Statistik"],
             ["kod", "🔒 Kod"],
           ] as const
@@ -142,19 +148,32 @@ function ForalderPage() {
       {tab === "mal" && <MalTab state={state} />}
       {tab === "angra" && <AngraTab state={state} />}
       {tab === "superkrafter" && <SuperkrafterTab state={state} />}
+      {tab === "huset" && <HusetTab state={state} />}
       {tab === "kod" && <KodTab />}
       {tab === "statistik" && <StatistikTab state={state} />}
 
-      <div className="pt-8 border-t border-zinc-950/5">
+      <div className="pt-8 border-t border-zinc-950/5 flex flex-wrap gap-6">
         <button
           onClick={() => {
-            if (confirm("Nollställ all data? Detta kan inte ångras.")) {
-              resetFamily();
+            if (
+              confirm(
+                "Nollställ barnens poäng och progress? Namn, bilder, uppgifter och belöningar behålls.",
+              )
+            ) {
+              resetProgress();
             }
           }}
           className="text-xs text-zinc-400 hover:text-red-500 underline"
         >
-          Nollställ all data
+          Nollställ barnens poäng &amp; progress
+        </button>
+        <button
+          onClick={() => {
+            if (confirm("Nollställ husets progress till nivå 0?")) resetHouse();
+          }}
+          className="text-xs text-zinc-400 hover:text-red-500 underline"
+        >
+          Nollställ husets progress
         </button>
       </div>
     </AppShell>
@@ -173,6 +192,94 @@ function Section({
       <h3 className="text-lg font-semibold font-display px-1">{title}</h3>
       {children}
     </section>
+  );
+}
+
+function HusetTab({ state }: { state: ReturnType<typeof useFamily> }) {
+  const level = houseLevelFor(state.lifetimeStars);
+  const [stars, setStars] = useState("");
+  return (
+    <div className="space-y-8">
+      <Section title="🏰 Husets progress">
+        <div className="bg-white ring-1 ring-black/5 rounded-3xl p-5 space-y-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+                Nuvarande nivå
+              </p>
+              <p className="text-2xl font-semibold font-display">
+                Nivå {level} · {state.lifetimeStars} ⭐
+              </p>
+            </div>
+            <div className="flex gap-2 items-end">
+              <Field label="Justera stjärnor">
+                <input
+                  type="number"
+                  value={stars}
+                  onChange={(e) => setStars(e.target.value)}
+                  className={input}
+                  placeholder="t.ex. 250 eller -100"
+                />
+              </Field>
+              <button
+                onClick={() => {
+                  const n = parseInt(stars);
+                  if (!isNaN(n)) addHouseStars(n);
+                  setStars("");
+                }}
+                className="bg-brand text-white font-semibold rounded-xl px-4 py-2.5 shrink-0"
+              >
+                Spara
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (confirm("Nollställ husets progress till nivå 0?"))
+                resetHouse();
+            }}
+            className="text-xs text-zinc-400 hover:text-red-500 underline"
+          >
+            Nollställ husets progress
+          </button>
+        </div>
+      </Section>
+
+      <Section title="Lås upp / lås nivåer">
+        <p className="text-xs text-zinc-500 px-1">
+          Klicka på en nivå för att sätta huset till den nivån.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {HOUSE_LEVELS.map((l) => {
+            const done = l.level <= level;
+            return (
+              <button
+                key={l.level}
+                onClick={() => {
+                  if (
+                    confirm(
+                      `Sätt huset till nivå ${l.level} (${l.threshold} ⭐)?`,
+                    )
+                  )
+                    setHouseLevel(l.level);
+                }}
+                className={`rounded-2xl p-3 text-center space-y-1 ring-1 ring-black/5 transition-transform hover:scale-[1.03] ${
+                  done ? "bg-white" : "bg-zinc-100 opacity-70"
+                }`}
+              >
+                <div className="text-4xl leading-none">
+                  {done ? l.unlockEmoji : "🔒"}
+                </div>
+                <p className="font-semibold text-xs font-display">
+                  Nivå {l.level}
+                </p>
+                <p className="text-[11px] text-zinc-500">{l.threshold} ⭐</p>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+    </div>
   );
 }
 
