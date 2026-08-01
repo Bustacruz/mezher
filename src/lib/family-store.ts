@@ -290,6 +290,49 @@ export function getFamily(): FamilyState {
   return state;
 }
 
+// ---------- Backup (lokal fil) ----------
+
+/** Laddar ner hela familjens data som en JSON-backupfil. */
+export function downloadBackup() {
+  if (typeof window === "undefined") return;
+  const payload = {
+    app: "var-familj",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    state,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const d = new Date();
+  const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  a.href = url;
+  a.download = `familj-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Läser en uppladdad backupfil och ersätter all lokal data. */
+export async function restoreBackupFromFile(file: File): Promise<void> {
+  const text = await file.text();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("Filen är inte en giltig backup (kunde inte läsas).");
+  }
+  const obj = parsed as { state?: Partial<FamilyState> } & Partial<FamilyState>;
+  const raw = obj && typeof obj === "object" && obj.state ? obj.state : obj;
+  if (!raw || typeof raw !== "object" || !Array.isArray(raw.children)) {
+    throw new Error("Filen innehåller ingen familjedata.");
+  }
+  set(() => migrate(raw as Partial<FamilyState>));
+}
+
 // ---------- Children ----------
 export function addChild(input: { name: string; emoji: string; color: Child["color"] }) {
   set((s) => ({

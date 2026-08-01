@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   addChild,
@@ -13,6 +13,7 @@ import {
   checkParentPin,
   completedToday,
   contributeToGoal,
+  downloadBackup,
   rejectPending,
   removeChallenge,
   removeChild,
@@ -22,6 +23,7 @@ import {
   removeTask,
   resetHouse,
   resetProgress,
+  restoreBackupFromFile,
   setFamilyName,
   setHouseLevel,
   setParentPin,
@@ -74,6 +76,7 @@ function ForalderPage() {
     | "mal"
     | "huset"
     | "statistik"
+    | "backup"
     | "kod"
   >("barn");
 
@@ -112,6 +115,7 @@ function ForalderPage() {
             ["mal", "🏆 Familjemål"],
             ["huset", "🏰 Huset"],
             ["statistik", "📊 Statistik"],
+            ["backup", "💾 Backup"],
             ["kod", "🔒 Kod"],
           ] as const
         ).map(([key, label]) => (
@@ -150,6 +154,7 @@ function ForalderPage() {
       {tab === "superkrafter" && <SuperkrafterTab state={state} />}
       {tab === "huset" && <HusetTab state={state} />}
       {tab === "kod" && <KodTab />}
+      {tab === "backup" && <BackupTab />}
       {tab === "statistik" && <StatistikTab state={state} />}
 
       <div className="pt-8 border-t border-zinc-950/5 flex flex-wrap gap-6">
@@ -181,6 +186,83 @@ function ForalderPage() {
 }
 
 function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return SectionImpl({ title, children });
+}
+
+function BackupTab() {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <Section title="💾 Backup på enheten">
+        <p className="text-sm text-zinc-500 max-w-prose">
+          All data sparas lokalt på den här enheten. Ta en backupfil regelbundet
+          – särskilt före en ny version – så kan du ladda upp den igen och få
+          tillbaka barn, bilder, poäng och husets progress.
+        </p>
+        <div className="flex flex-wrap gap-3 pt-2">
+          <button
+            onClick={() => {
+              downloadBackup();
+              setMsg({ ok: true, text: "Backupfil nedladdad ✅" });
+            }}
+            className="px-5 py-3 rounded-2xl bg-ink text-white font-semibold"
+          >
+            ⬇️ Ladda ner backup
+          </button>
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="px-5 py-3 rounded-2xl bg-white ring-1 ring-black/5 font-semibold"
+          >
+            ⬆️ Återställ från fil
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              if (
+                !confirm(
+                  "Ersätt all nuvarande data med innehållet i backupfilen?",
+                )
+              )
+                return;
+              try {
+                await restoreBackupFromFile(file);
+                setMsg({ ok: true, text: "Backup återställd ✅" });
+              } catch (err) {
+                setMsg({
+                  ok: false,
+                  text: err instanceof Error ? err.message : "Kunde inte läsa filen.",
+                });
+              }
+            }}
+          />
+        </div>
+        {msg && (
+          <p
+            className={`text-sm font-semibold pt-2 ${msg.ok ? "text-green-600" : "text-red-500"}`}
+          >
+            {msg.text}
+          </p>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function SectionImpl({
   title,
   children,
 }: {
