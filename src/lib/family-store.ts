@@ -177,7 +177,9 @@ function defaultState(): FamilyState {
   };
 }
 
-let state: FamilyState = load();
+const serverState: FamilyState = defaultState();
+let state: FamilyState = serverState;
+let hydrated = false;
 const listeners = new Set<() => void>();
 
 function load(): FamilyState {
@@ -233,6 +235,14 @@ function set(updater: (s: FamilyState) => FamilyState) {
 }
 
 function subscribe(l: () => void) {
+  if (!hydrated) {
+    hydrated = true;
+    const loaded = load();
+    if (loaded !== state) {
+      state = loaded;
+      queueMicrotask(() => listeners.forEach((fn) => fn()));
+    }
+  }
   listeners.add(l);
   return () => listeners.delete(l);
 }
@@ -241,7 +251,7 @@ export function useFamily(): FamilyState {
   return useSyncExternalStore(
     subscribe,
     () => state,
-    () => state,
+    () => serverState,
   );
 }
 

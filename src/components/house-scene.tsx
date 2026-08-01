@@ -23,6 +23,7 @@ export function HouseScene({ compact = false }: { compact?: boolean }) {
       )
     : 100;
   const houseSize = compact ? 90 + level * 2.5 : 130 + level * 5;
+  const sceneHeight = compact ? 240 : 380;
 
   return (
     <div className="bg-gradient-to-b from-sky-100 to-green-100 ring-1 ring-black/5 rounded-[32px] p-5 md:p-8 space-y-5 overflow-hidden">
@@ -47,30 +48,14 @@ export function HouseScene({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
 
-      <div
-        className="relative rounded-[24px] bg-white/50 ring-1 ring-white/70 grid place-items-center py-6"
-        style={{ minHeight: compact ? 180 : 260 }}
-      >
-        <div
-          className="leading-none animate-pop-in select-none"
-          style={{ fontSize: houseSize }}
-          role="img"
-          aria-label={stage.name}
-        >
-          {level === 0 ? "🟩" : stage.emoji}
-        </div>
-        <div className="flex flex-wrap justify-center gap-1 px-4">
-          {decor.map((d) => (
-            <span
-              key={d.level}
-              title={d.unlockName}
-              className="text-3xl md:text-4xl leading-none"
-            >
-              {d.unlockEmoji}
-            </span>
-          ))}
-        </div>
-      </div>
+      <LivingScene
+        level={level}
+        stageEmoji={stage.emoji}
+        stageName={stage.name}
+        decor={decor}
+        houseSize={houseSize}
+        height={sceneHeight}
+      />
 
       <div>
         <div className="h-5 w-full bg-white/70 rounded-full overflow-hidden ring-1 ring-black/5">
@@ -85,6 +70,147 @@ export function HouseScene({ compact = false }: { compact?: boolean }) {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Deterministiskt "slumptal" 0–1 utifrån ett heltal (samma på server & klient). */
+function rnd(seed: number) {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return Math.round((x - Math.floor(x)) * 1000) / 1000;
+}
+
+const ANIMALS = new Set([
+  "🐶", "🐱", "🐰", "🐴", "🐔", "🦔", "🦊", "🦉", "🐝", "🦌", "🐿️", "🦢",
+  "🐧", "🦜", "🐘", "🦁", "🐉", "🦄", "🦋", "🦆",
+]);
+
+function LivingScene({
+  level,
+  stageEmoji,
+  stageName,
+  decor,
+  houseSize,
+  height,
+}: {
+  level: number;
+  stageEmoji: string;
+  stageName: string;
+  decor: { level: number; unlockEmoji: string; unlockName: string }[];
+  houseSize: number;
+  height: number;
+}) {
+  // Visa de senaste dekorationerna i scenen; äldre ligger längst bak.
+  const scene = decor.slice(-18);
+  const isNight = level >= 40;
+
+  return (
+    <div
+      className={`relative rounded-[28px] overflow-hidden ring-1 ring-white/70 select-none ${
+        isNight
+          ? "bg-gradient-to-b from-indigo-900 via-indigo-500 to-emerald-700"
+          : "bg-gradient-to-b from-sky-300 via-sky-100 to-lime-200"
+      }`}
+      style={{ height }}
+      role="img"
+      aria-label={`${stageName} med ${decor.length} upplåsta saker`}
+    >
+      {/* Sol / måne */}
+      <div
+        className="absolute text-5xl md:text-6xl leading-none animate-sun-spin"
+        style={{ top: "6%", right: "7%" }}
+      >
+        {isNight ? "🌙" : "☀️"}
+      </div>
+
+      {/* Stjärnor på natten */}
+      {isNight &&
+        Array.from({ length: 14 }, (_, i) => (
+          <span
+            key={`st${i}`}
+            className="absolute text-xs animate-twinkle"
+            style={{
+              left: `${Math.round(rnd(i + 1) * 95)}%`,
+              top: `${Math.round(rnd(i + 50) * 40)}%`,
+              animationDelay: `${Math.round(rnd(i + 90) * 240) / 100}s`,
+            }}
+          >
+            ✨
+          </span>
+        ))}
+
+      {/* Moln som driver */}
+      {Array.from({ length: 3 }, (_, i) => (
+        <div
+          key={`cl${i}`}
+          className="absolute text-4xl md:text-5xl leading-none opacity-90 animate-cloud-drift"
+          style={{
+            top: `${6 + i * 11}%`,
+            animationDuration: `${34 + i * 13}s`,
+            animationDelay: `${-i * 9}s`,
+          }}
+        >
+          ☁️
+        </div>
+      ))}
+
+      {/* Kullar */}
+      <div className="absolute inset-x-0 bottom-0 h-[46%]">
+        <div className="absolute -left-[10%] bottom-[38%] w-[70%] h-[70%] rounded-[50%] bg-emerald-300/70" />
+        <div className="absolute -right-[12%] bottom-[40%] w-[65%] h-[65%] rounded-[50%] bg-emerald-400/60" />
+        <div className="absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-b from-lime-400 to-green-500" />
+      </div>
+
+      {/* Bakre dekor (träd/växter) */}
+      {scene
+        .filter((d) => !ANIMALS.has(d.unlockEmoji))
+        .map((d, i) => (
+          <span
+            key={`b${d.level}`}
+            title={d.unlockName}
+            className="absolute leading-none animate-sway"
+            style={{
+              left: `${Math.round(4 + rnd(d.level * 3 + 1) * 90)}%`,
+              bottom: `${Math.round(18 + rnd(d.level * 7 + 2) * 22)}%`,
+              fontSize: Math.round(26 + rnd(d.level * 5) * 22),
+              animationDelay: `${Math.round(rnd(d.level + i) * 300) / 100}s`,
+              animationDuration: `${Math.round((3 + rnd(d.level * 2) * 2.5) * 100) / 100}s`,
+            }}
+          >
+            {d.unlockEmoji}
+          </span>
+        ))}
+
+      {/* Huset */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 leading-none animate-float-bob drop-shadow-xl"
+        style={{ bottom: "16%", fontSize: houseSize }}
+      >
+        {level === 0 ? "🟩" : stageEmoji}
+      </div>
+
+      {/* Djur som hoppar i förgrunden */}
+      {scene
+        .filter((d) => ANIMALS.has(d.unlockEmoji))
+        .map((d, i) => (
+          <span
+            key={`a${d.level}`}
+            title={d.unlockName}
+            className="absolute leading-none animate-hop"
+            style={{
+              left: `${Math.round(6 + rnd(d.level * 11 + 5) * 86)}%`,
+              bottom: `${Math.round(2 + rnd(d.level * 13 + 3) * 13)}%`,
+              fontSize: Math.round(30 + rnd(d.level * 9) * 20),
+              animationDelay: `${Math.round(rnd(d.level + i * 2) * 300) / 100}s`,
+              animationDuration: `${Math.round((2.8 + rnd(d.level * 4) * 2) * 100) / 100}s`,
+            }}
+          >
+            {d.unlockEmoji}
+          </span>
+        ))}
+
+      {/* Gräs i förgrunden */}
+      <div className="absolute inset-x-0 bottom-0 h-6 bg-green-600/70" />
     </div>
   );
 }
@@ -117,17 +243,22 @@ export function HouseUnlockCelebration() {
         <p className="text-xs font-bold uppercase tracking-widest text-brand">
           Nivå {level} upplåst!
         </p>
-        <div className="text-[110px] leading-none">{stage.emoji}</div>
+        <div className="text-[110px] leading-none animate-trophy-in">
+          {stage.emoji}
+        </div>
         <h2 className="text-3xl font-bold font-display">
           Huset växte till {stage.name}!
         </h2>
         <div className="space-y-2">
-          {newLevels.map((l) => (
+          {newLevels.map((l, i) => (
             <div
               key={l.level}
-              className="flex items-center gap-4 bg-accent-light rounded-2xl p-3 text-left"
+              className="flex items-center gap-4 bg-accent-light rounded-2xl p-3 text-left animate-grow-in"
+              style={{ animationDelay: `${0.25 + i * 0.18}s` }}
             >
-              <span className="text-5xl leading-none">{l.unlockEmoji}</span>
+              <span className="text-5xl leading-none animate-sway">
+                {l.unlockEmoji}
+              </span>
               <div>
                 <p className="font-semibold font-display text-lg">
                   {l.unlockName}
