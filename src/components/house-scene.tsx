@@ -77,7 +77,7 @@ export function HouseScene({ compact = false }: { compact?: boolean }) {
 /** Deterministiskt "slumptal" 0–1 utifrån ett heltal (samma på server & klient). */
 function rnd(seed: number) {
   const x = Math.sin(seed * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
+  return Math.round((x - Math.floor(x)) * 1000) / 1000;
 }
 
 const ANIMALS = new Set([
@@ -130,9 +130,9 @@ function LivingScene({
             key={`st${i}`}
             className="absolute text-xs animate-twinkle"
             style={{
-              left: `${rnd(i + 1) * 95}%`,
-              top: `${rnd(i + 50) * 40}%`,
-              animationDelay: `${rnd(i + 90) * 2.4}s`,
+              left: `${Math.round(rnd(i + 1) * 95)}%`,
+              top: `${Math.round(rnd(i + 50) * 40)}%`,
+              animationDelay: `${Math.round(rnd(i + 90) * 240) / 100}s`,
             }}
           >
             ✨
@@ -170,11 +170,11 @@ function LivingScene({
             title={d.unlockName}
             className="absolute leading-none animate-sway"
             style={{
-              left: `${4 + rnd(d.level * 3 + 1) * 90}%`,
-              bottom: `${18 + rnd(d.level * 7 + 2) * 22}%`,
-              fontSize: 26 + rnd(d.level * 5) * 22,
-              animationDelay: `${rnd(d.level + i) * 3}s`,
-              animationDuration: `${3 + rnd(d.level * 2) * 2.5}s`,
+              left: `${Math.round(4 + rnd(d.level * 3 + 1) * 90)}%`,
+              bottom: `${Math.round(18 + rnd(d.level * 7 + 2) * 22)}%`,
+              fontSize: Math.round(26 + rnd(d.level * 5) * 22),
+              animationDelay: `${Math.round(rnd(d.level + i) * 300) / 100}s`,
+              animationDuration: `${Math.round((3 + rnd(d.level * 2) * 2.5) * 100) / 100}s`,
             }}
           >
             {d.unlockEmoji}
@@ -198,11 +198,11 @@ function LivingScene({
             title={d.unlockName}
             className="absolute leading-none animate-hop"
             style={{
-              left: `${6 + rnd(d.level * 11 + 5) * 86}%`,
-              bottom: `${2 + rnd(d.level * 13 + 3) * 13}%`,
-              fontSize: 30 + rnd(d.level * 9) * 20,
-              animationDelay: `${rnd(d.level + i * 2) * 3}s`,
-              animationDuration: `${2.8 + rnd(d.level * 4) * 2}s`,
+              left: `${Math.round(6 + rnd(d.level * 11 + 5) * 86)}%`,
+              bottom: `${Math.round(2 + rnd(d.level * 13 + 3) * 13)}%`,
+              fontSize: Math.round(30 + rnd(d.level * 9) * 20),
+              animationDelay: `${Math.round(rnd(d.level + i * 2) * 300) / 100}s`,
+              animationDuration: `${Math.round((2.8 + rnd(d.level * 4) * 2) * 100) / 100}s`,
             }}
           >
             {d.unlockEmoji}
