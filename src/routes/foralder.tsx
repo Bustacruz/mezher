@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import {
   addChild,
@@ -13,6 +13,7 @@ import {
   checkParentPin,
   completedToday,
   contributeToGoal,
+  downloadBackup,
   rejectPending,
   removeChallenge,
   removeChild,
@@ -22,6 +23,7 @@ import {
   removeTask,
   resetHouse,
   resetProgress,
+  restoreBackupFromFile,
   setFamilyName,
   setHouseLevel,
   setParentPin,
@@ -74,6 +76,7 @@ function ForalderPage() {
     | "mal"
     | "huset"
     | "statistik"
+    | "backup"
     | "kod"
   >("barn");
 
@@ -112,6 +115,7 @@ function ForalderPage() {
             ["mal", "🏆 Familjemål"],
             ["huset", "🏰 Huset"],
             ["statistik", "📊 Statistik"],
+            ["backup", "💾 Backup"],
             ["kod", "🔒 Kod"],
           ] as const
         ).map(([key, label]) => (
@@ -150,6 +154,7 @@ function ForalderPage() {
       {tab === "superkrafter" && <SuperkrafterTab state={state} />}
       {tab === "huset" && <HusetTab state={state} />}
       {tab === "kod" && <KodTab />}
+      {tab === "backup" && <BackupTab />}
       {tab === "statistik" && <StatistikTab state={state} />}
 
       <div className="pt-8 border-t border-zinc-950/5 flex flex-wrap gap-6">
