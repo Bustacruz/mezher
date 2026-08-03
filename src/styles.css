@@ -96,6 +96,71 @@
   60% { transform: scale(1.2) translateY(-6px); opacity: 1; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
+@keyframes walk-across {
+  0%   { transform: translateX(0) scaleX(1); }
+  48%  { transform: translateX(var(--walk, 120px)) scaleX(1); }
+  50%  { transform: translateX(var(--walk, 120px)) scaleX(-1); }
+  98%  { transform: translateX(0) scaleX(-1); }
+  100% { transform: translateX(0) scaleX(1); }
+}
+@keyframes waddle {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-5px) rotate(6deg); }
+}
+@keyframes flap-fly {
+  0%   { transform: translate(-20vw, 0) scaleY(1); opacity: 0; }
+  10%  { opacity: 1; }
+  25%  { transform: translate(10vw, -18px) scaleY(0.75); }
+  50%  { transform: translate(45vw, 10px) scaleY(1); }
+  75%  { transform: translate(80vw, -14px) scaleY(0.75); }
+  90%  { opacity: 1; }
+  100% { transform: translate(120vw, 0) scaleY(1); opacity: 0; }
+}
+@keyframes flutter {
+  0%   { transform: translate(0, 0) rotate(-8deg); }
+  25%  { transform: translate(28px, -26px) rotate(10deg); }
+  50%  { transform: translate(56px, 4px) rotate(-6deg); }
+  75%  { transform: translate(24px, -18px) rotate(12deg); }
+  100% { transform: translate(0, 0) rotate(-8deg); }
+}
+@keyframes smoke-rise {
+  0%   { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  20%  { opacity: 0.75; }
+  100% { transform: translate(18px, -70px) scale(1.5); opacity: 0; }
+}
+@keyframes house-breathe {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  45% { transform: translateY(-6px) scale(0.985, 1.02); }
+  70% { transform: translateY(0) scale(1.02, 0.98); }
+}
+@keyframes grass-wave {
+  0%, 100% { transform: skewX(-6deg); }
+  50% { transform: skewX(6deg); }
+}
+@keyframes firefly {
+  0%   { transform: translate(0, 0); opacity: 0.2; }
+  25%  { transform: translate(30px, -34px); opacity: 1; }
+  50%  { transform: translate(-16px, -58px); opacity: 0.45; }
+  75%  { transform: translate(-38px, -22px); opacity: 1; }
+  100% { transform: translate(0, 0); opacity: 0.2; }
+}
+@keyframes wiggle-pop {
+  0%, 100% { transform: rotate(-4deg) scale(1); }
+  30% { transform: rotate(5deg) scale(1.12); }
+  60% { transform: rotate(-3deg) scale(0.94); }
+}
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes bob-water {
+  0%, 100% { transform: translateX(0) rotate(-3deg); }
+  50% { transform: translateX(26px) rotate(3deg); }
+}
+@keyframes glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 14px rgba(255, 220, 120, 0.9)); transform: scale(1.08); }
+}
 .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .animate-count-up { animation: count-up 0.5s ease-out both; }
 .animate-task-pop { animation: task-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
@@ -108,6 +173,23 @@
 .animate-twinkle { animation: twinkle 2.4s ease-in-out infinite; }
 .animate-sun-spin { animation: sun-spin 40s linear infinite; }
 .animate-grow-in { animation: grow-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-walk-across { animation: walk-across 14s ease-in-out infinite; transform-origin: 50% 100%; }
+.animate-waddle { animation: waddle 1.1s ease-in-out infinite; transform-origin: 50% 100%; }
+.animate-flap-fly { animation: flap-fly linear infinite; }
+.animate-flutter { animation: flutter 7s ease-in-out infinite; }
+.animate-smoke-rise { animation: smoke-rise 4s ease-out infinite; }
+.animate-house-breathe { animation: house-breathe 4.5s ease-in-out infinite; transform-origin: 50% 100%; }
+.animate-grass-wave { animation: grass-wave 4s ease-in-out infinite; transform-origin: 50% 100%; }
+.animate-firefly { animation: firefly 9s ease-in-out infinite; }
+.animate-wiggle-pop { animation: wiggle-pop 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+.animate-spin-slow { animation: spin-slow 9s linear infinite; }
+.animate-bob-water { animation: bob-water 6s ease-in-out infinite; }
+.animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-walk-across, .animate-waddle, .animate-flap-fly, .animate-flutter,
+  .animate-smoke-rise, .animate-house-breathe, .animate-firefly,
+  .animate-wiggle-pop, .animate-bob-water { animation: none; }
+}
 
 /*
  * Design system definition.

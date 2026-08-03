@@ -80,10 +80,30 @@ function rnd(seed: number) {
   return Math.round((x - Math.floor(x)) * 1000) / 1000;
 }
 
-const ANIMALS = new Set([
-  "🐶", "🐱", "🐰", "🐴", "🐔", "🦔", "🦊", "🦉", "🐝", "🦌", "🐿️", "🦢",
-  "🐧", "🦜", "🐘", "🦁", "🐉", "🦄", "🦋", "🦆",
+/** Djur som går fram och tillbaka på marken. */
+const WALKERS = new Set([
+  "🐶", "🐱", "🐰", "🐴", "🦔", "🦊", "🦌", "🐿️", "🐘", "🦁", "🐧", "🐔",
+  "🦄",
 ]);
+/** Saker som flyger runt i luften. */
+const FLYERS = new Set(["🦋", "🐝", "🦉", "🦜", "🐉"]);
+/** Saker som guppar på vattnet. */
+const FLOATERS = new Set(["🦆", "🦢", "⛵"]);
+/** Saker som snurrar. */
+const SPINNERS = new Set(["🎡", "🎠", "⛲"]);
+/** Saker som lyser/pulserar. */
+const GLOWERS = new Set(["🌈", "🎆", "🎇", "🌌", "👑", "🏵️", "🌋"]);
+
+type Decor = { level: number; unlockEmoji: string; unlockName: string };
+
+function kindOf(emoji: string) {
+  if (WALKERS.has(emoji)) return "walk" as const;
+  if (FLYERS.has(emoji)) return "fly" as const;
+  if (FLOATERS.has(emoji)) return "float" as const;
+  if (SPINNERS.has(emoji)) return "spin" as const;
+  if (GLOWERS.has(emoji)) return "glow" as const;
+  return "plant" as const;
+}
 
 function LivingScene({
   level,
@@ -96,13 +116,15 @@ function LivingScene({
   level: number;
   stageEmoji: string;
   stageName: string;
-  decor: { level: number; unlockEmoji: string; unlockName: string }[];
+  decor: Decor[];
   houseSize: number;
   height: number;
 }) {
   // Visa de senaste dekorationerna i scenen; äldre ligger längst bak.
   const scene = decor.slice(-18);
   const isNight = level >= 40;
+  const by = (k: ReturnType<typeof kindOf>) =>
+    scene.filter((d) => kindOf(d.unlockEmoji) === k);
 
   return (
     <div
@@ -154,6 +176,22 @@ function LivingScene({
         </div>
       ))}
 
+      {/* Fåglar som flyger över himlen */}
+      {!isNight &&
+        Array.from({ length: 2 }, (_, i) => (
+          <div
+            key={`bd${i}`}
+            className="absolute text-2xl leading-none animate-flap-fly"
+            style={{
+              top: `${16 + i * 9}%`,
+              animationDuration: `${22 + i * 9}s`,
+              animationDelay: `${-i * 11}s`,
+            }}
+          >
+            🕊️
+          </div>
+        ))}
+
       {/* Kullar */}
       <div className="absolute inset-x-0 bottom-0 h-[46%]">
         <div className="absolute -left-[10%] bottom-[38%] w-[70%] h-[70%] rounded-[50%] bg-emerald-300/70" />
@@ -161,56 +199,174 @@ function LivingScene({
         <div className="absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-b from-lime-400 to-green-500" />
       </div>
 
-      {/* Bakre dekor (träd/växter) */}
-      {scene
-        .filter((d) => !ANIMALS.has(d.unlockEmoji))
-        .map((d, i) => (
+      {/* Damm (om något flyter) */}
+      {by("float").length > 0 && (
+        <div className="absolute left-[6%] bottom-[6%] w-[34%] h-[12%] rounded-[50%] bg-sky-400/60 ring-2 ring-sky-200/60" />
+      )}
+
+      {/* Växter och byggnader som vajar/vickar */}
+      {[...by("plant"), ...by("glow")].map((d, i) => (
+        <span
+          key={`b${d.level}`}
+          title={d.unlockName}
+          className={`absolute leading-none ${
+            kindOf(d.unlockEmoji) === "glow"
+              ? "animate-glow-pulse"
+              : rnd(d.level) > 0.5
+                ? "animate-sway"
+                : "animate-wiggle-pop"
+          }`}
+          style={{
+            left: `${Math.round(4 + rnd(d.level * 3 + 1) * 90)}%`,
+            bottom: `${Math.round(18 + rnd(d.level * 7 + 2) * 22)}%`,
+            fontSize: Math.round(26 + rnd(d.level * 5) * 22),
+            animationDelay: `${Math.round(rnd(d.level + i) * 300) / 100}s`,
+            animationDuration: `${Math.round((3 + rnd(d.level * 2) * 2.5) * 100) / 100}s`,
+          }}
+        >
+          {d.unlockEmoji}
+        </span>
+      ))}
+
+      {/* Snurrande nöjesfält */}
+      {by("spin").map((d) => (
+        <span
+          key={`s${d.level}`}
+          title={d.unlockName}
+          className="absolute leading-none animate-spin-slow"
+          style={{
+            left: `${Math.round(8 + rnd(d.level * 17 + 4) * 80)}%`,
+            bottom: `${Math.round(20 + rnd(d.level * 6) * 18)}%`,
+            fontSize: Math.round(30 + rnd(d.level * 5) * 16),
+            animationDuration: `${Math.round((7 + rnd(d.level) * 6) * 100) / 100}s`,
+          }}
+        >
+          {d.unlockEmoji}
+        </span>
+      ))}
+
+      {/* Flygande djur */}
+      {by("fly").map((d, i) => (
+        <span
+          key={`f${d.level}`}
+          title={d.unlockName}
+          className="absolute leading-none animate-flutter"
+          style={{
+            left: `${Math.round(10 + rnd(d.level * 23 + 7) * 70)}%`,
+            bottom: `${Math.round(35 + rnd(d.level * 19) * 30)}%`,
+            fontSize: Math.round(24 + rnd(d.level * 3) * 14),
+            animationDelay: `${Math.round(rnd(d.level + i * 3) * 500) / 100}s`,
+            animationDuration: `${Math.round((6 + rnd(d.level * 8) * 5) * 100) / 100}s`,
+          }}
+        >
+          {d.unlockEmoji}
+        </span>
+      ))}
+
+      {/* Huset */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 leading-none drop-shadow-xl"
+        style={{ bottom: "16%", fontSize: houseSize }}
+      >
+        <span className="block animate-house-breathe">
+          {level === 0 ? "🟩" : stageEmoji}
+        </span>
+        {/* Rök ur skorstenen */}
+        {level > 0 &&
+          Array.from({ length: 3 }, (_, i) => (
+            <span
+              key={`sm${i}`}
+              className="absolute text-2xl leading-none animate-smoke-rise"
+              style={{
+                left: "62%",
+                top: "-6%",
+                animationDelay: `${i * 1.3}s`,
+              }}
+            >
+              💨
+            </span>
+          ))}
+      </div>
+
+      {/* Djur som guppar på dammen */}
+      {by("float").map((d, i) => (
+        <span
+          key={`w${d.level}`}
+          title={d.unlockName}
+          className="absolute leading-none animate-bob-water"
+          style={{
+            left: `${Math.round(8 + rnd(d.level * 29 + 2) * 22)}%`,
+            bottom: `${Math.round(8 + rnd(d.level * 31) * 6)}%`,
+            fontSize: Math.round(26 + rnd(d.level * 7) * 14),
+            animationDelay: `${Math.round(rnd(d.level + i) * 400) / 100}s`,
+            animationDuration: `${Math.round((5 + rnd(d.level * 6) * 4) * 100) / 100}s`,
+          }}
+        >
+          {d.unlockEmoji}
+        </span>
+      ))}
+
+      {/* Djur som går fram och tillbaka i förgrunden */}
+      {by("walk").map((d, i) => (
+        <span
+          key={`a${d.level}`}
+          title={d.unlockName}
+          className="absolute leading-none animate-walk-across"
+          style={
+            {
+              left: `${Math.round(6 + rnd(d.level * 11 + 5) * 60)}%`,
+              bottom: `${Math.round(2 + rnd(d.level * 13 + 3) * 13)}%`,
+              fontSize: Math.round(30 + rnd(d.level * 9) * 20),
+              "--walk": `${Math.round(60 + rnd(d.level * 3) * 180)}px`,
+              animationDelay: `${Math.round(rnd(d.level + i * 2) * 600) / 100}s`,
+              animationDuration: `${Math.round((11 + rnd(d.level * 4) * 9) * 100) / 100}s`,
+            } as React.CSSProperties
+          }
+        >
           <span
-            key={`b${d.level}`}
-            title={d.unlockName}
-            className="absolute leading-none animate-sway"
+            className="block animate-waddle"
             style={{
-              left: `${Math.round(4 + rnd(d.level * 3 + 1) * 90)}%`,
-              bottom: `${Math.round(18 + rnd(d.level * 7 + 2) * 22)}%`,
-              fontSize: Math.round(26 + rnd(d.level * 5) * 22),
-              animationDelay: `${Math.round(rnd(d.level + i) * 300) / 100}s`,
-              animationDuration: `${Math.round((3 + rnd(d.level * 2) * 2.5) * 100) / 100}s`,
+              animationDuration: `${Math.round((0.8 + rnd(d.level * 5) * 0.8) * 100) / 100}s`,
             }}
           >
             {d.unlockEmoji}
           </span>
-        ))}
+        </span>
+      ))}
 
-      {/* Huset */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 leading-none animate-float-bob drop-shadow-xl"
-        style={{ bottom: "16%", fontSize: houseSize }}
-      >
-        {level === 0 ? "🟩" : stageEmoji}
-      </div>
-
-      {/* Djur som hoppar i förgrunden */}
-      {scene
-        .filter((d) => ANIMALS.has(d.unlockEmoji))
-        .map((d, i) => (
+      {/* Eldflugor på natten */}
+      {isNight &&
+        Array.from({ length: 8 }, (_, i) => (
           <span
-            key={`a${d.level}`}
-            title={d.unlockName}
-            className="absolute leading-none animate-hop"
+            key={`ff${i}`}
+            className="absolute text-base leading-none animate-firefly"
             style={{
-              left: `${Math.round(6 + rnd(d.level * 11 + 5) * 86)}%`,
-              bottom: `${Math.round(2 + rnd(d.level * 13 + 3) * 13)}%`,
-              fontSize: Math.round(30 + rnd(d.level * 9) * 20),
-              animationDelay: `${Math.round(rnd(d.level + i * 2) * 300) / 100}s`,
-              animationDuration: `${Math.round((2.8 + rnd(d.level * 4) * 2) * 100) / 100}s`,
+              left: `${Math.round(8 + rnd(i * 3 + 11) * 84)}%`,
+              bottom: `${Math.round(10 + rnd(i * 7 + 5) * 35)}%`,
+              animationDelay: `${Math.round(rnd(i + 21) * 800) / 100}s`,
+              animationDuration: `${Math.round((7 + rnd(i + 4) * 6) * 100) / 100}s`,
             }}
           >
-            {d.unlockEmoji}
+            🟡
           </span>
         ))}
 
       {/* Gräs i förgrunden */}
-      <div className="absolute inset-x-0 bottom-0 h-6 bg-green-600/70" />
+      <div className="absolute inset-x-0 bottom-0 h-6 bg-green-600/70 animate-grass-wave" />
+      <div className="absolute inset-x-0 bottom-0 flex justify-between px-2 pointer-events-none">
+        {Array.from({ length: 22 }, (_, i) => (
+          <span
+            key={`g${i}`}
+            className="text-lg leading-none animate-sway"
+            style={{
+              animationDelay: `${Math.round(rnd(i * 5 + 3) * 400) / 100}s`,
+              animationDuration: `${Math.round((2.6 + rnd(i + 2) * 2.4) * 100) / 100}s`,
+            }}
+          >
+            🌾
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
