@@ -386,6 +386,30 @@ export function removeTask(id: string) {
   set((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) }));
 }
 
+/** Flyttar en uppgift upp/ner i ordningen (bland uppgifter i samma tidpass). */
+export function moveTask(id: string, dir: -1 | 1) {
+  set((s) => {
+    const idx = s.tasks.findIndex((t) => t.id === id);
+    if (idx === -1) return s;
+    const slot = s.tasks[idx].slot;
+    let swap = -1;
+    for (
+      let i = idx + dir;
+      i >= 0 && i < s.tasks.length;
+      i += dir
+    ) {
+      if (s.tasks[i].slot === slot) {
+        swap = i;
+        break;
+      }
+    }
+    if (swap === -1) return s;
+    const tasks = [...s.tasks];
+    [tasks[idx], tasks[swap]] = [tasks[swap], tasks[idx]];
+    return { ...s, tasks };
+  });
+}
+
 function taskDoneKey(taskId: string, childId: string, date: string) {
   return `${taskId}:${childId}:${date}`;
 }
