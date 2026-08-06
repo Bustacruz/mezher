@@ -798,11 +798,17 @@ function BeloningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
                 onChange={(e) => updateReward(r.id, { emoji: e.target.value })}
                 className="w-full text-5xl text-center bg-card-soft rounded-xl py-2"
               />
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                Namn
+              </label>
               <input
                 value={r.title}
                 onChange={(e) => updateReward(r.id, { title: e.target.value })}
-                className={`${input} font-semibold text-sm`}
+                className={`${input} font-semibold text-sm w-full`}
               />
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                Kostnad ⭐ / För vem
+              </label>
               <div className="flex gap-2">
                 <input
                   type="number"
