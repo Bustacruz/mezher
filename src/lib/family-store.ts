@@ -481,6 +481,10 @@ function applyCompletion(
     }),
     familyPoints: s.familyPoints + task.points,
     lifetimeStars: s.lifetimeStars + task.points,
+    goals: s.goals.map((g) => ({
+      ...g,
+      progress: Math.min(g.target, g.progress + task.points),
+    })),
   };
 }
 
@@ -531,6 +535,10 @@ export function uncompleteTask(taskId: string, childId: string, date?: string) {
       }),
       familyPoints: Math.max(0, s.familyPoints - task.points),
       lifetimeStars: Math.max(0, s.lifetimeStars - task.points),
+      goals: s.goals.map((g) => ({
+        ...g,
+        progress: Math.max(0, g.progress - task.points),
+      })),
     };
   });
 }
