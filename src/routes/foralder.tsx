@@ -888,12 +888,7 @@ function BeloningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
             />
           </Field>
           <Field label="Emoji">
-            <input
-              value={emoji}
-              onChange={(e) => setEmoji(e.target.value)}
-              className={input}
-              maxLength={4}
-            />
+            <EmojiPicker value={emoji} onChange={setEmoji} />
           </Field>
           <Field label="Poäng">
             <input
@@ -1007,11 +1002,11 @@ function MalTab({ state }: { state: ReturnType<typeof useFamily> }) {
               key={g.id}
               className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex flex-wrap items-center gap-3"
             >
-              <input
+              <EmojiPicker
                 value={g.emoji}
-                maxLength={4}
-                onChange={(e) => updateGoal(g.id, { emoji: e.target.value })}
-                className="size-14 text-3xl text-center bg-card-soft rounded-xl shrink-0"
+                size={56}
+                onChange={(v) => updateGoal(g.id, { emoji: v })}
+                className="shrink-0"
               />
               <input
                 value={g.title}
@@ -1067,12 +1062,7 @@ function MalTab({ state }: { state: ReturnType<typeof useFamily> }) {
             />
           </Field>
           <Field label="Emoji">
-            <input
-              value={emoji}
-              onChange={(e) => setEmoji(e.target.value)}
-              className={input}
-              maxLength={4}
-            />
+            <EmojiPicker value={emoji} onChange={setEmoji} />
           </Field>
           <Field label="Målpoäng">
             <input
@@ -1359,13 +1349,10 @@ function SuperkrafterTab({ state }: { state: ReturnType<typeof useFamily> }) {
               className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-3"
             >
               <div className="flex items-center gap-3">
-                <input
+                <EmojiPicker
                   value={ch.emoji}
-                  maxLength={4}
-                  onChange={(e) =>
-                    updateChallenge(ch.id, { emoji: e.target.value })
-                  }
-                  className="size-14 text-3xl text-center bg-card-soft rounded-xl"
+                  size={56}
+                  onChange={(v) => updateChallenge(ch.id, { emoji: v })}
                 />
                 <input
                   value={ch.title}
@@ -1473,11 +1460,9 @@ function SuperkrafterTab({ state }: { state: ReturnType<typeof useFamily> }) {
             />
           </Field>
           <Field label="Emoji">
-            <input
+            <EmojiPicker
               value={draft.emoji}
-              maxLength={4}
-              onChange={(e) => setDraft({ ...draft, emoji: e.target.value })}
-              className={input}
+              onChange={(v) => setDraft({ ...draft, emoji: v })}
             />
           </Field>
           <Field label="För vem">
