@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { EmojiPicker } from "@/components/emoji-picker";
 import {
   addChild,
   addChallenge,
@@ -633,11 +634,10 @@ function UppgifterTab({ state }: { state: ReturnType<typeof useFamily> }) {
                     ↓
                   </button>
                 </div>
-                <input
+                <EmojiPicker
                   value={t.emoji}
-                  onChange={(e) => updateTask(t.id, { emoji: e.target.value })}
-                  maxLength={4}
-                  className="size-12 rounded-xl bg-card-soft text-2xl text-center shrink-0"
+                  onChange={(v) => updateTask(t.id, { emoji: v })}
+                  className="shrink-0"
                 />
                 <input
                   value={t.title}
@@ -727,12 +727,7 @@ function UppgifterTab({ state }: { state: ReturnType<typeof useFamily> }) {
             />
           </Field>
           <Field label="Emoji">
-            <input
-              value={emoji}
-              onChange={(e) => setEmoji(e.target.value)}
-              className={input}
-              maxLength={4}
-            />
+            <EmojiPicker value={emoji} onChange={setEmoji} />
           </Field>
           <Field label="Poäng">
             <input
@@ -830,11 +825,11 @@ function BeloningarTab({ state }: { state: ReturnType<typeof useFamily> }) {
               key={r.id}
               className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-2"
             >
-              <input
+              <EmojiPicker
                 value={r.emoji}
-                maxLength={4}
-                onChange={(e) => updateReward(r.id, { emoji: e.target.value })}
-                className="w-full text-5xl text-center bg-card-soft rounded-xl py-2"
+                size={72}
+                onChange={(v) => updateReward(r.id, { emoji: v })}
+                className="mx-auto w-fit"
               />
               <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                 Namn
