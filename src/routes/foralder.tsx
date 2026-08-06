@@ -32,6 +32,7 @@ import {
   updateChild,
   updateGoal,
   updateReward,
+  updateTask,
   useFamily,
 } from "@/lib/family-store";
 import type {
@@ -594,24 +595,84 @@ function UppgifterTab({ state }: { state: ReturnType<typeof useFamily> }) {
           {state.tasks.map((t) => (
             <div
               key={t.id}
-              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 flex items-center gap-3"
+              className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-3"
             >
-              <div className="size-12 rounded-xl bg-card-soft grid place-items-center text-2xl shrink-0">
-                {t.emoji}
+              <div className="flex items-center gap-3">
+                <input
+                  value={t.emoji}
+                  onChange={(e) => updateTask(t.id, { emoji: e.target.value })}
+                  maxLength={4}
+                  className="size-12 rounded-xl bg-card-soft text-2xl text-center shrink-0"
+                />
+                <input
+                  value={t.title}
+                  onChange={(e) => updateTask(t.id, { title: e.target.value })}
+                  className={`${input} flex-1 font-semibold`}
+                />
+                <button
+                  onClick={() => removeTask(t.id)}
+                  className="text-xs text-zinc-400 hover:text-red-500 shrink-0"
+                >
+                  Ta bort
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{t.title}</p>
-                <p className="text-xs text-zinc-500">
-                  {SLOT_LABEL[t.slot]} · {t.frequency} · +{t.points} ⭐
-                  {t.requiresApproval && " · kräver godkännande"}
-                </p>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={t.points}
+                  onChange={(e) =>
+                    updateTask(t.id, { points: parseInt(e.target.value) || 0 })
+                  }
+                  className={input}
+                />
+                <select
+                  value={t.slot}
+                  onChange={(e) =>
+                    updateTask(t.id, { slot: e.target.value as RoutineSlot })
+                  }
+                  className={input}
+                >
+                  <option value="morgon">Morgon</option>
+                  <option value="dag">Dag</option>
+                  <option value="kvall">Kväll</option>
+                </select>
+                <select
+                  value={t.frequency}
+                  onChange={(e) =>
+                    updateTask(t.id, { frequency: e.target.value as Frequency })
+                  }
+                  className={input}
+                >
+                  <option value="daglig">Daglig</option>
+                  <option value="veckovis">Veckovis</option>
+                  <option value="manatlig">Månatlig</option>
+                  <option value="engangs">Engångs</option>
+                </select>
+                <select
+                  value={t.childId}
+                  onChange={(e) => updateTask(t.id, { childId: e.target.value })}
+                  className={input}
+                >
+                  <option value="all">Alla barn</option>
+                  {state.children.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <button
-                onClick={() => removeTask(t.id)}
-                className="text-xs text-zinc-400 hover:text-red-500 shrink-0"
-              >
-                Ta bort
-              </button>
+              <label className="flex items-center gap-2 text-xs text-zinc-500">
+                <input
+                  type="checkbox"
+                  checked={t.requiresApproval}
+                  onChange={(e) =>
+                    updateTask(t.id, { requiresApproval: e.target.checked })
+                  }
+                  className="size-4 accent-brand"
+                />
+                Kräver godkännande
+              </label>
             </div>
           ))}
         </div>
