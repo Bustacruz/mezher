@@ -592,13 +592,47 @@ function UppgifterTab({ state }: { state: ReturnType<typeof useFamily> }) {
   return (
     <div className="space-y-8">
       <Section title="Alla uppgifter">
+        <p className="text-xs text-zinc-500 mb-3">
+          Använd ↑ / ↓ för att ändra ordningen – samma ordning visas på
+          förstasidan.
+        </p>
+        {(["morgon", "dag", "kvall"] as RoutineSlot[]).map((slotKey) => {
+          const list = state.tasks.filter((t) => t.slot === slotKey);
+          if (list.length === 0) return null;
+          return (
+            <div key={slotKey} className="mb-6">
+              <h4 className="font-bold text-sm text-zinc-500 mb-2">
+                {slotKey === "morgon"
+                  ? "🌅 Morgon"
+                  : slotKey === "dag"
+                    ? "☀️ Dag"
+                    : "🌙 Kväll"}
+              </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {state.tasks.map((t) => (
+          {list.map((t, i) => (
             <div
               key={t.id}
               className="bg-white ring-1 ring-black/5 rounded-2xl p-4 space-y-3"
             >
               <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-1 shrink-0">
+                  <button
+                    onClick={() => moveTask(t.id, -1)}
+                    disabled={i === 0}
+                    className="size-7 rounded-lg bg-card-soft text-sm disabled:opacity-30"
+                    aria-label="Flytta upp"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    onClick={() => moveTask(t.id, 1)}
+                    disabled={i === list.length - 1}
+                    className="size-7 rounded-lg bg-card-soft text-sm disabled:opacity-30"
+                    aria-label="Flytta ner"
+                  >
+                    ↓
+                  </button>
+                </div>
                 <input
                   value={t.emoji}
                   onChange={(e) => updateTask(t.id, { emoji: e.target.value })}
@@ -677,6 +711,9 @@ function UppgifterTab({ state }: { state: ReturnType<typeof useFamily> }) {
             </div>
           ))}
         </div>
+            </div>
+          );
+        })}
       </Section>
 
       <Section title="Skapa ny uppgift">
