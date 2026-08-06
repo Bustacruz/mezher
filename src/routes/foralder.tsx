@@ -23,6 +23,7 @@ import {
   removeTask,
   resetHouse,
   resetProgress,
+  moveTask,
   restoreBackupFromFile,
   setFamilyName,
   setHouseLevel,
