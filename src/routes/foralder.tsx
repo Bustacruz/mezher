@@ -32,6 +32,7 @@ import {
   updateChild,
   updateGoal,
   updateReward,
+  updateTask,
   useFamily,
 } from "@/lib/family-store";
 import type {
