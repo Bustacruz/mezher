@@ -68,7 +68,7 @@ function HusetPage() {
                 <p className="font-semibold text-sm font-display">
                   {done ? l.unlockName : `Nivå ${l.level}`}
                 </p>
-                <p className="text-[11px] font-bold text-zinc-500">
+                <p className="text-[11px] font-bold text-zinc-800 bg-white/80 px-2 py-0.5 rounded-full inline-block">
                   {l.threshold} ⭐
                 </p>
               </div>
