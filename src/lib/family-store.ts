@@ -364,6 +364,25 @@ export function removeChild(id: string) {
   set((s) => ({ ...s, children: s.children.filter((c) => c.id !== id) }));
 }
 
+// ---------- Märken ----------
+/** Sätter manuell progress för ett märke. null = tillbaka till automatiskt värde. */
+export function setBadgeProgress(
+  childId: string,
+  badgeId: string,
+  value: number | null,
+) {
+  set((s) => ({
+    ...s,
+    children: s.children.map((c) => {
+      if (c.id !== childId) return c;
+      const next = { ...(c.badgeProgress ?? {}) };
+      if (value === null) delete next[badgeId];
+      else next[badgeId] = Math.max(0, Math.round(value));
+      return { ...c, badgeProgress: next };
+    }),
+  }));
+}
+
 // ---------- Tasks ----------
 export function addTask(t: Omit<Task, "id" | "completedDates" | "pendingApproval">) {
   set((s) => ({
