@@ -88,14 +88,14 @@ function Index() {
             >
               <div className="flex items-center justify-between">
                 <div className="text-6xl leading-none">{g.emoji}</div>
-                <span className="text-xs font-bold text-accent">
+                <span className="text-xs font-bold text-accent-strong bg-accent-light px-2 py-0.5 rounded-full">
                   {g.progress}/{g.target}
                 </span>
               </div>
               <p className="font-semibold font-display">{g.title}</p>
-              <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+              <div className="h-2.5 w-full bg-accent-track rounded-full overflow-hidden ring-1 ring-black/5">
                 <div
-                  className="h-full bg-accent rounded-full"
+                  className="h-full bg-gradient-to-r from-accent to-accent-fill rounded-full shadow-[0_0_8px_rgba(249,115,22,0.4)]"
                   style={{
                     width: `${Math.min(100, (g.progress / g.target) * 100)}%`,
                   }}
