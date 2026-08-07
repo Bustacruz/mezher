@@ -13,6 +13,7 @@ import {
 import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
 import type { RoutineSlot } from "@/lib/family-types";
 import { ChildAvatar } from "@/components/child-avatar";
+import { badgeStatuses } from "@/lib/badges";
 
 export const Route = createFileRoute("/barn/$id")({
   head: ({ params }) => ({
