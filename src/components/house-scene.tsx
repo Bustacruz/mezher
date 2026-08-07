@@ -36,11 +36,11 @@ export function HouseScene({ compact = false }: { compact?: boolean }) {
             {stage.emoji} {level === 0 ? "Tom tomt" : stage.name}
           </h3>
         </div>
-        <div className="text-right">
-          <p className="text-3xl md:text-4xl font-bold font-display text-accent">
+        <div className="text-right space-y-1">
+          <p className="inline-flex items-center gap-1.5 text-3xl md:text-4xl font-bold font-display text-accent-strong bg-white/80 px-3 py-1 rounded-2xl shadow-sm">
             {stars} ⭐
           </p>
-          <p className="text-xs text-zinc-500 font-semibold">
+          <p className="text-base md:text-lg font-bold text-ink">
             {next
               ? `${next.threshold - stars} ⭐ till nivå ${next.level}`
               : "Max nivå – slottet är klart!"}
@@ -58,16 +58,26 @@ export function HouseScene({ compact = false }: { compact?: boolean }) {
       />
 
       <div>
-        <div className="h-5 w-full bg-white/70 rounded-full overflow-hidden ring-1 ring-black/5">
+        <div className="h-5 w-full bg-accent-track rounded-full overflow-hidden ring-1 ring-black/10 shadow-inner">
           <div
-            className="h-full bg-accent rounded-full transition-all duration-1000"
+            className="h-full bg-gradient-to-r from-accent to-accent-fill rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(249,115,22,0.45)]"
             style={{ width: `${Math.max(3, pct)}%` }}
           />
         </div>
         {next && (
-          <p className="mt-2 text-sm font-semibold text-zinc-600">
-            Nästa: {next.unlockEmoji} {next.unlockName}
-          </p>
+          <div className="mt-3 flex items-center gap-3 bg-white/80 rounded-2xl p-3 ring-1 ring-black/5 shadow-sm">
+            <span className="text-5xl md:text-6xl leading-none animate-float-bob">
+              {next.unlockEmoji}
+            </span>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                Nästa upplåsning
+              </p>
+              <p className="text-lg md:text-xl font-bold font-display text-accent-strong">
+                {next.unlockName}
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>
