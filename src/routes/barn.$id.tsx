@@ -13,6 +13,7 @@ import {
 import { COLOR_MAP, SLOT_LABEL } from "@/lib/family-types";
 import type { RoutineSlot } from "@/lib/family-types";
 import { ChildAvatar } from "@/components/child-avatar";
+import { badgeStatuses } from "@/lib/badges";
 
 export const Route = createFileRoute("/barn/$id")({
   head: ({ params }) => ({
@@ -171,25 +172,32 @@ function BarnPage() {
           <h3 className="text-xl md:text-2xl font-semibold font-display">
             Dina märken
           </h3>
-          {child.badges.length === 0 ? (
-            <EmptyState
-              emoji="🏆"
-              title="Inga märken än"
-              body="Genomför uppgifter och samla streaks för att låsa upp märken!"
-            />
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {child.badges.map((b) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {badgeStatuses(state, child).map((b) => (
+              <div
+                key={b.badge.id}
+                className={`p-5 rounded-[24px] text-center space-y-2 ring-1 ${
+                  b.unlocked
+                    ? "bg-white ring-accent-strong/40"
+                    : "bg-white/60 ring-black/5"
+                }`}
+              >
                 <div
-                  key={b}
-                  className="bg-white ring-1 ring-black/5 p-5 rounded-[24px] text-center space-y-2"
+                  className={`text-6xl ${b.unlocked ? "" : "grayscale opacity-40"}`}
                 >
-                  <div className="text-5xl">🏆</div>
-                  <p className="font-semibold font-display text-sm">{b}</p>
+                  {b.badge.emoji}
                 </div>
-              ))}
-            </div>
-          )}
+                <p className="font-semibold font-display text-sm">
+                  {b.badge.title}
+                </p>
+                {!b.unlocked && (
+                  <p className="text-xs font-bold text-zinc-500">
+                    {b.remaining} kvar
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </section>
       )}
     </AppShell>

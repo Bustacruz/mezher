@@ -19,6 +19,8 @@ export interface Child {
   streaks: Record<string, { current: number; best: number; lastDay: string | null }>;
   history: { date: string; taskId: string; points: number }[];
   badges: string[];
+  /** Manuellt satt progress per märke (badgeId -> värde). Åsidosätter beräknat värde. */
+  badgeProgress?: Record<string, number>;
 }
 
 export interface Task {

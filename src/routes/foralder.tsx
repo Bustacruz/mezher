@@ -48,6 +48,7 @@ import type {
 import { COLOR_MAP, METRIC_LABEL, PERIOD_LABEL, SLOT_LABEL } from "@/lib/family-types";
 import { ChildAvatar, fileToCompressedDataUrl } from "@/components/child-avatar";
 import { HOUSE_LEVELS, houseLevelFor } from "@/lib/house";
+import { MarkenTab } from "@/components/badges-admin";
 
 export const Route = createFileRoute("/foralder")({
   head: () => ({
@@ -76,6 +77,7 @@ function ForalderPage() {
     | "godkann"
     | "angra"
     | "superkrafter"
+    | "marken"
     | "mal"
     | "huset"
     | "statistik"
@@ -115,6 +117,7 @@ function ForalderPage() {
             ["godkann", `✅ Godkänn${pending.length ? ` (${pending.length})` : ""}`],
             ["angra", "↩️ Ångra avbockning"],
             ["superkrafter", "🦸 Superkrafter"],
+            ["marken", "🎖️ Märken"],
             ["mal", "🏆 Familjemål"],
             ["huset", "🏰 Huset"],
             ["statistik", "📊 Statistik"],
@@ -155,6 +158,7 @@ function ForalderPage() {
       {tab === "mal" && <MalTab state={state} />}
       {tab === "angra" && <AngraTab state={state} />}
       {tab === "superkrafter" && <SuperkrafterTab state={state} />}
+      {tab === "marken" && <MarkenTab state={state} />}
       {tab === "huset" && <HusetTab state={state} />}
       {tab === "kod" && <KodTab />}
       {tab === "backup" && <BackupTab />}
